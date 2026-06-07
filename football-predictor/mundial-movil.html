@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#08080f">
+<title>Mundial 2026 — Predictor</title>
+<style>
+:root{
+  --bg:#08080f; --s1:#111119; --s2:#1a1a26; --s3:#22222f;
+  --border:#2c2c3e; --text:#e8e8f2; --muted:#6a6a85;
+  --green:#00d46a; --blue:#4da6ff; --red:#ff453a;
+  --orange:#ff9f0a; --purple:#bf5af2; --yellow:#ffd60a;
+  --nav:64px; --hdr:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:15px;line-height:1.45;}
+
+/* ── LAYOUT ── */
+header{
+  position:fixed;top:0;left:0;right:0;height:var(--hdr);
+  background:rgba(8,8,15,0.9);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;z-index:50;
+  justify-content:space-between;
+}
+header h1{font-size:1rem;font-weight:700;color:var(--blue);letter-spacing:-.02em;}
+header span{font-size:.7rem;color:var(--muted);}
+#bankrollBadge{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:20px;padding:4px 10px;font-size:.75rem;
+  color:var(--green);font-weight:700;
+}
+main{
+  position:fixed;top:var(--hdr);bottom:var(--nav);left:0;right:0;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.tab{display:none;padding:16px 14px 8px;}
+.tab.active{display:block;}
+nav.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav);
+  background:rgba(8,8,15,0.95);backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  display:grid;grid-template-columns:repeat(3,1fr);
+  padding-bottom:env(safe-area-inset-bottom,0);z-index:50;
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;border:none;background:none;
+  color:var(--muted);font-size:.62rem;cursor:pointer;
+  transition:color .2s;padding:0;
+}
+.nav-btn.active{color:var(--blue);}
+.nav-btn svg{width:22px;height:22px;stroke-width:1.8;}
+.nav-btn.active svg{stroke:var(--blue);}
+
+/* ── CARDS ── */
+.card{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;padding:14px;margin-bottom:12px;
+}
+.card-title{
+  font-size:.7rem;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;
+}
+
+/* ── TEAM SELECTOR ── */
+.match-selector{
+  display:grid;grid-template-columns:1fr 36px 1fr;gap:8px;
+  align-items:end;margin-bottom:12px;
+}
+.vs-circle{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--s2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;font-weight:700;color:var(--muted);
+}
+label.field-lbl{font-size:.72rem;color:var(--muted);display:block;margin-bottom:4px;}
+select.team-sel, input.field-in{
+  width:100%;background:var(--s2);color:var(--text);
+  border:1px solid var(--border);border-radius:10px;
+  padding:10px 10px;font-size:.9rem;outline:none;
+  appearance:none;-webkit-appearance:none;
+}
+select.team-sel:focus, input.field-in:focus{border-color:var(--blue);}
+
+/* Optional odds row */
+.odds-row{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+  margin-bottom:12px;
+}
+.odds-row .field-in{font-size:.85rem;padding:8px;}
+.odds-label{font-size:.65rem;color:var(--muted);text-align:center;display:block;margin-bottom:3px;}
+
+/* Main CTA button */
+.btn-primary{
+  width:100%;background:var(--blue);color:#000;border:none;
+  border-radius:12px;padding:13px;font-size:.95rem;font-weight:700;
+  cursor:pointer;transition:opacity .15s;margin-bottom:14px;
+}
+.btn-primary:active{opacity:.7;}
+.btn-secondary{
+  width:100%;background:var(--s2);color:var(--text);border:1px solid var(--border);
+  border-radius:12px;padding:11px;font-size:.85rem;font-weight:600;
+  cursor:pointer;transition:opacity .15s;margin-bottom:10px;
+}
+.btn-secondary:active{opacity:.7;}
+.btn-danger{
+  background:rgba(255,69,58,.15);border:1px solid var(--red);
+  color:var(--red);border-radius:10px;padding:8px 14px;font-size:.8rem;
+  cursor:pointer;border-radius:10px;
+}
+.btn-danger:active{opacity:.7;}
+
+/* ── CONSENSUS (big display) ── */
+.consensus-card{
+  background:linear-gradient(135deg,rgba(77,166,255,.08),rgba(0,212,106,.08));
+  border:1px solid var(--blue);border-radius:14px;padding:14px;margin-bottom:12px;
+}
+.consensus-title{font-size:.7rem;color:var(--blue);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.cons-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+.cons-item .big{font-size:1.6rem;font-weight:800;}
+.cons-item .lbl{font-size:.7rem;color:var(--muted);}
+.cons-winner .big{color:var(--green);}
+.cons-winner .lbl{color:var(--green);}
+.div-badge{
+  margin-top:10px;text-align:center;font-size:.72rem;
+  padding:4px 10px;border-radius:20px;display:inline-block;
+}
+.div-low{background:rgba(0,212,106,.12);color:var(--green);}
+.div-high{background:rgba(255,159,10,.12);color:var(--orange);}
+
+/* ── MODEL CARDS ── */
+.models-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.model-item{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:12px;padding:12px;
+}
+.model-name{font-size:.7rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.prob-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.prob-label{font-size:.78rem;color:var(--muted);}
+.prob-val{font-size:.9rem;font-weight:700;}
+.bar-bg{height:4px;background:var(--s3);border-radius:2px;margin-bottom:6px;overflow:hidden;}
+.bar-fill{height:4px;border-radius:2px;transition:width .5s ease;}
+.bar-hw{background:var(--blue);}
+.bar-d{background:var(--yellow);}
+.bar-aw{background:var(--red);}
+.model-footer{font-size:.7rem;color:var(--muted);text-align:center;margin-top:4px;}
+
+/* ── SCORE MATRIX ── */
+.matrix-wrap{overflow-x:auto;margin-top:2px;}
+.score-mat{border-collapse:collapse;font-size:.7rem;width:100%;}
+.score-mat th,.score-mat td{
+  width:42px;height:30px;text-align:center;
+  border:1px solid var(--border);
+}
+.score-mat th{background:var(--s2);color:var(--muted);font-weight:600;font-size:.65rem;}
+.score-mat .corner{background:var(--s2);color:var(--muted);font-size:.6rem;}
+.mat-axis{font-size:.65rem;color:var(--muted);text-align:center;margin-top:4px;}
+
+/* Top marcadores */
+.score-list{display:flex;flex-direction:column;gap:6px;}
+.score-row{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--s2);border-radius:8px;padding:8px 12px;
+}
+.score-tag{font-weight:700;font-size:.9rem;}
+.score-pct{font-size:.8rem;color:var(--muted);}
+.score-tipo{font-size:.65rem;padding:2px 7px;border-radius:10px;}
+.tipo-local{background:rgba(77,166,255,.15);color:var(--blue);}
+.tipo-empate{background:rgba(255,214,10,.15);color:var(--yellow);}
+.tipo-visitante{background:rgba(255,69,58,.15);color:var(--red);}
+
+/* ── BANKROLL ── */
+.bankroll-hero{
+  background:linear-gradient(135deg,rgba(0,212,106,.1),rgba(77,166,255,.08));
+  border:1px solid rgba(0,212,106,.3);border-radius:14px;
+  padding:18px;margin-bottom:12px;text-align:center;
+}
+.bk-amount{font-size:2.2rem;font-weight:800;color:var(--green);}
+.bk-label{font-size:.75rem;color:var(--muted);margin-top:2px;}
+.bk-pl{font-size:.85rem;margin-top:4px;}
+
+.kelly-result{
+  border-radius:10px;padding:12px;margin-top:8px;font-size:.82rem;
+  line-height:1.7;
+}
+.kelly-pos{background:rgba(0,212,106,.1);border:1px solid rgba(0,212,106,.3);}
+.kelly-neg{background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.3);}
+.kelly-neu{background:var(--s2);border:1px solid var(--border);color:var(--muted);}
+
+/* Register form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.form-grid.full{grid-template-columns:1fr;}
+select.field-in{padding:10px;}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.stat-box{
+  background:var(--s1);border:1px solid var(--border);border-radius:12px;
+  padding:12px;text-align:center;
+}
+.stat-val{font-size:1.4rem;font-weight:800;}
+.stat-lbl{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.green{color:var(--green);} .blue{color:var(--blue);}
+.red{color:var(--red);} .orange{color:var(--orange);}
+
+/* History list */
+.hist-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 12px;background:var(--s1);border-radius:10px;
+  border:1px solid var(--border);margin-bottom:7px;
+}
+.hist-partido{font-size:.8rem;font-weight:600;}
+.hist-meta{font-size:.7rem;color:var(--muted);margin-top:1px;}
+.hist-pl{font-size:.9rem;font-weight:700;}
+.pl-pos{color:var(--green);} .pl-neg{color:var(--red);}
+.empty-state{text-align:center;color:var(--muted);padding:30px 0;font-size:.85rem;}
+
+/* Section divider */
+.section-header{
+  font-size:.7rem;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.06em;
+  margin:14px 0 8px;padding-left:2px;
+}
+.hint{font-size:.72rem;color:var(--muted);margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Mundial 2026</h1>
+    <span>Predictor Matemático</span>
+  </div>
+  <div id="bankrollBadge">$1000.00</div>
+</header>
+
+<main>
+
+<!-- ══════════ TAB 1: PARTIDO ══════════ -->
+<section id="tab-partido" class="tab active">
+
+  <div class="card">
+    <div class="card-title">Seleccionar Partido</div>
+    <div class="match-selector">
+      <div>
+        <label class="field-lbl">Local</label>
+        <select id="homeTeam" class="team-sel"></select>
+      </div>
+      <div class="vs-circle">VS</div>
+      <div>
+        <label class="field-lbl">Visitante</label>
+        <select id="awayTeam" class="team-sel"></select>
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-bottom:6px;">Cuotas del mercado (opcional)</div>
+    <p class="hint">Añade las cuotas para activar el modelo de cuotas implícitas y Kelly.</p>
+    <div class="odds-row">
+      <div>
+        <span class="odds-label">Local</span>
+        <input id="ol" type="number" class="field-in" placeholder="2.10" step="0.01">
+      </div>
+      <div>
+        <span class="odds-label">Empate</span>
+        <input id="oe" type="number" class="field-in" placeholder="3.40" step="0.01">
+      </div>
+      <div>
+        <span class="odds-label">Visit.</span>
+        <input id="ov" type="number" class="field-in" placeholder="3.20" step="0.01">
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="runPrediction()">CALCULAR PREDICCION</button>
+  </div>
+
+  <!-- Results (hidden until calculated) -->
+  <div id="results" style="display:none">
+
+    <div id="consensusCard" class="consensus-card"></div>
+
+    <div class="section-header">Por modelo</div>
+    <div id="modelsList" class="models-list"></div>
+
+    <div class="section-header">Marcadores mas probables (Dixon-Coles)</div>
+    <div id="scoreList" class="card score-list"></div>
+
+    <div class="section-header">Matriz de probabilidad (0-4 goles)</div>
+    <div class="card">
+      <div class="matrix-wrap">
+        <table id="scoreMatrix" class="score-mat"></table>
+      </div>
+      <div class="mat-axis">Goles visitante --&gt; / &darr; Goles local</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════ TAB 2: KELLY / APUESTA ══════════ -->
+<section id="tab-kelly" class="tab">
+
+  <div id="bankrollHero" class="bankroll-hero">
+    <div class="bk-amount" id="bkAmount">$1,000.00</div>
+    <div class="bk-label">Bankroll actual</div>
+    <div class="bk-pl" id="bkPL" style="color:var(--muted)">P/L: $0.00 (0.00%)</div>
+  </div>
+
+  <!-- Kelly calculator -->
+  <div class="card">
+    <div class="card-title">Calculadora Kelly (1/4 Kelly)</div>
+    <div class="form-grid">
+      <div>
+        <label class="field-lbl">Probabilidad %</label>
+        <input id="kP" type="number" class="field-in" placeholder="60" min="1" max="99" oninput="calcKelly()">
+      </div>
+      <div>
+        <label class="field-lbl">Cuota decimal</label>
+        <input id="kOdds" type="number" class="field-in" placeholder="2.10" step="0.01" oninput="calcKelly()">
+      </div>
+    </div>
+    <div id="kellyOut" class="kelly-result kelly-neu">
+      Ingresa la probabilidad del modelo y la cuota del mercado.
+    </div>
+  </div>
+
+  <!-- Register bet -->
+  <div class="card">
+    <div class="card-title">Registrar Apuesta</div>
+    <p class="hint">Registra la apuesta y el resultado para actualizar el bankroll.</p>
+
+    <div class="form-grid full">
+      <div>
+        <label class="field-lbl">Partido (texto libre)</label>
+        <input id="regPartido" type="text" class="field-in" placeholder="Argentina vs Brasil">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label class="field-lbl">Aposté a</label>
+        <select id="regTipo" class="field-in">
+          <option value="local">Local</option>
+          <option value="empate">Empate</option>
+          <option value="visitante">Visitante</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-lbl">Resultado real</label>
+        <select id="regResult" class="field-in">
+          <option value="local">Local gano</option>
+          <option value="empate">Empate</option>
+          <option value="visitante">Visitante gano</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label class="field-lbl">Monto apostado $</label>
+        <input id="regMonto" type="number" class="field-in" placeholder="50">
+      </div>
+      <div>
+        <label class="field-lbl">Cuota jugada</label>
+        <input id="regCuota" type="number" class="field-in" placeholder="2.10" step="0.01">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="registerBet()">GUARDAR Y ACTUALIZAR BANKROLL</button>
+    <button class="btn-secondary" onclick="resetBankroll()">Reiniciar bankroll a $1000</button>
+  </div>
+
+</section>
+
+<!-- ══════════ TAB 3: ESTADÍSTICAS ══════════ -->
+<section id="tab-stats" class="tab">
+
+  <div id="statsGrid" class="stats-grid">
+    <div class="stat-box"><div class="stat-val green" id="sRoi">0.00%</div><div class="stat-lbl">ROI</div></div>
+    <div class="stat-box"><div class="stat-val blue" id="sTasa">—</div><div class="stat-lbl">Tasa acierto</div></div>
+    <div class="stat-box"><div class="stat-val orange" id="sTotal">0</div><div class="stat-lbl">Apuestas</div></div>
+    <div class="stat-box"><div class="stat-val" id="sRacha">—</div><div class="stat-lbl">Racha</div></div>
+  </div>
+
+  <div class="section-header">Historial</div>
+  <div id="histList"></div>
+  <div style="text-align:center;margin-top:8px;margin-bottom:16px;">
+    <button class="btn-danger" onclick="clearHistory()">Borrar historial</button>
+  </div>
+
+</section>
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-partido" onclick="showTab('partido')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 6l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z" stroke-width="1.5"/></svg>
+    Partido
+  </button>
+  <button class="nav-btn" id="nav-kelly" onclick="showTab('kelly')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M8 6V4M16 6V4"/></svg>
+    Apuesta
+  </button>
+  <button class="nav-btn" id="nav-stats" onclick="showTab('stats')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 20h18M7 20V10M12 20V4M17 20v-6"/></svg>
+    Stats
+  </button>
+</nav>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════
+const TEAMS = {
+  "Argentina":  {elo:1900,atk:2.2,def:1.0},
+  "Brasil":     {elo:1890,atk:2.3,def:1.0},
+  "Francia":    {elo:1885,atk:2.1,def:0.9},
+  "Inglaterra": {elo:1870,atk:1.9,def:0.8},
+  "España":     {elo:1860,atk:2.0,def:0.9},
+  "Alemania":   {elo:1850,atk:2.1,def:1.0},
+  "Portugal":   {elo:1840,atk:1.8,def:0.8},
+  "P. Bajos":   {elo:1830,atk:1.9,def:0.9},
+  "Belgica":    {elo:1820,atk:1.8,def:0.9},
+  "Italia":     {elo:1800,atk:1.7,def:0.8},
+  "Croacia":    {elo:1780,atk:1.6,def:1.0},
+  "Uruguay":    {elo:1800,atk:1.7,def:1.1},
+  "Colombia":   {elo:1780,atk:1.6,def:1.2},
+  "Mexico":     {elo:1750,atk:1.4,def:1.3},
+  "EE.UU.":     {elo:1710,atk:1.3,def:1.2},
+  "Japon":      {elo:1760,atk:1.5,def:1.0},
+  "Marruecos":  {elo:1720,atk:1.2,def:1.4},
+  "Senegal":    {elo:1740,atk:1.4,def:1.2},
+  "Canada":     {elo:1680,atk:1.0,def:1.5},
+  "Ecuador":    {elo:1700,atk:1.2,def:1.3},
+  "Peru":       {elo:1690,atk:1.2,def:1.3},
+  "Chile":      {elo:1710,atk:1.3,def:1.2},
+  "Australia":  {elo:1680,atk:1.1,def:1.3},
+  "Corea":      {elo:1720,atk:1.3,def:1.2},
+  "Ghana":      {elo:1690,atk:1.2,def:1.3},
+  "Nigeria":    {elo:1710,atk:1.4,def:1.3},
+};
+
+const MEDIA = 1.4, F_ELO = 0.004, V_LOCAL = 100, RHO = -0.10, MAX_G = 9;
+
+// ══════════════════════════════════════════════════════════
+// MATH
+// ══════════════════════════════════════════════════════════
+function pPMF(k, lam) {
+  if (lam <= 0) return k === 0 ? 1 : 0;
+  let lp = -lam + k * Math.log(lam);
+  for (let i = 2; i <= k; i++) lp -= Math.log(i);
+  return Math.exp(lp);
+}
+function pProbs(lam, mu) {
+  let hw=0, d=0, aw=0;
+  for (let h=0; h<MAX_G; h++) {
+    const ph = pPMF(h, lam);
+    for (let a=0; a<MAX_G; a++) {
+      const p = ph * pPMF(a, mu);
+      if (h>a) hw+=p; else if (h===a) d+=p; else aw+=p;
+    }
+  }
+  const t = hw+d+aw;
+  return {hw:hw/t, d:d/t, aw:aw/t, lam, mu};
+}
+function tau(x, y, lam, mu) {
+  if (x===0&&y===0) return 1-lam*mu*RHO;
+  if (x===1&&y===0) return 1+mu*RHO;
+  if (x===0&&y===1) return 1+lam*RHO;
+  if (x===1&&y===1) return 1-RHO;
+  return 1;
+}
+function dcCalc(lam, mu) {
+  const mat={};
+  let hw=0, d=0, aw=0, tot=0;
+  for (let h=0; h<MAX_G; h++) {
+    const ph = pPMF(h, lam);
+    for (let a=0; a<MAX_G; a++) {
+      const p = ph * pPMF(a, mu) * tau(h, a, lam, mu);
+      mat[`${h}-${a}`]=p; tot+=p;
+      if (h>a) hw+=p; else if (h===a) d+=p; else aw+=p;
+    }
+  }
+  const nm={};
+  for (const k in mat) nm[k]=mat[k]/tot;
+  return {hw:hw/tot, d:d/tot, aw:aw/tot, mat:nm, lam, mu};
+}
+function predict(hk, ak, ol, oe, ov) {
+  const h=TEAMS[hk], a=TEAMS[ak];
+  // M1: Elo-Poisson
+  const eAdj=h.elo+V_LOCAL;
+  const l1=MEDIA*Math.exp(F_ELO*(eAdj-a.elo)/2);
+  const m1=MEDIA*Math.exp(F_ELO*(a.elo-eAdj)/2);
+  const M1=pProbs(l1, m1);
+  // M2: Ataque/Defensa
+  const l2=MEDIA*h.atk*a.def, m2=MEDIA*a.atk*h.def;
+  const M2=pProbs(l2, m2);
+  // M4: Dixon-Coles
+  const M4=dcCalc(l2, m2);
+  // M5: Consenso
+  const W=[.30,.35,.35];
+  const cHw=W[0]*M1.hw+W[1]*M2.hw+W[2]*M4.hw;
+  const cD =W[0]*M1.d +W[1]*M2.d +W[2]*M4.d;
+  const cAw=W[0]*M1.aw+W[1]*M2.aw+W[2]*M4.aw;
+  const vals=[M1.hw,M2.hw,M4.hw];
+  const mean=vals.reduce((s,v)=>s+v,0)/3;
+  const div=Math.sqrt(vals.reduce((s,v)=>s+(v-mean)**2,0)/3);
+
+  const models=[
+    {name:"Elo-Poisson (M1)", ...M1},
+    {name:"Ataque/Defensa (M2)", ...M2},
+    {name:"Dixon-Coles ρ=-0.10 (M4)", ...M4},
+    {name:"Consenso ponderado (M5)", hw:cHw, d:cD, aw:cAw, lam:M4.lam, mu:M4.mu},
+  ];
+  // M3: Cuotas implicitas
+  if (ol>1 && oe>1 && ov>1) {
+    const inv=1/ol+1/oe+1/ov;
+    models.splice(3,0,{name:"Cuotas implicitas (M3)",
+      hw:1/ol/inv, d:1/oe/inv, aw:1/ov/inv, lam:null, mu:null});
+  }
+  return {models, dcMat:M4.mat, cons:{hw:cHw,d:cD,aw:cAw,div}};
+}
+
+// ══════════════════════════════════════════════════════════
+// UI — TAB NAVIGATION
+// ══════════════════════════════════════════════════════════
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if (name==='stats') renderStats();
+}
+
+// ══════════════════════════════════════════════════════════
+// UI — POPULATE SELECTS
+// ══════════════════════════════════════════════════════════
+const teamNames = Object.keys(TEAMS);
+const sel1=document.getElementById('homeTeam');
+const sel2=document.getElementById('awayTeam');
+teamNames.forEach((t,i)=>{
+  sel1.appendChild(new Option(t,t));
+  const o2=new Option(t,t);
+  if(i===1) o2.selected=true;
+  sel2.appendChild(o2);
+});
+
+// ══════════════════════════════════════════════════════════
+// UI — PREDICTION RENDERING
+// ══════════════════════════════════════════════════════════
+let lastCons = null;
+
+function runPrediction() {
+  const hk=sel1.value, ak=sel2.value;
+  if (hk===ak) { alert('Selecciona equipos diferentes'); return; }
+  const ol=parseFloat(document.getElementById('ol').value);
+  const oe=parseFloat(document.getElementById('oe').value);
+  const ov=parseFloat(document.getElementById('ov').value);
+  const res = predict(hk, ak, ol, oe, ov);
+  lastCons = res.cons;
+
+  // Consensus
+  const {hw,d,aw,div} = res.cons;
+  const wins=[{v:hw,l:`Local (${hk})`},{v:d,l:'Empate'},{v:aw,l:`Visit. (${ak})`}];
+  const best=wins.reduce((a,b)=>b.v>a.v?b:a);
+  const cc=document.getElementById('consensusCard');
+  cc.innerHTML=`<div class="consensus-title">CONSENSO — 3 modelos</div>
+  <div class="cons-grid">
+    ${wins.map(w=>`<div class="cons-item${w===best?' cons-winner':''}">
+      <div class="big">${(w.v*100).toFixed(1)}%</div>
+      <div class="lbl">${w.l}</div>
+    </div>`).join('')}
+  </div>
+  <div style="text-align:center;margin-top:6px;">
+    <span class="div-badge ${div<0.04?'div-low':'div-high'}">
+      ${div<0.04?'Modelos alineados — confianza alta':'Modelos divergen — mayor incertidumbre'}
+      (div: ${div.toFixed(3)})
+    </span>
+  </div>`;
+
+  // Models list
+  const ml=document.getElementById('modelsList');
+  ml.innerHTML='';
+  res.models.forEach(m=>{
+    const div2=document.createElement('div');
+    div2.className='model-item';
+    const lamLine = m.lam!=null
+      ? `<div class="model-footer">lambda: ${m.lam.toFixed(2)} — ${m.mu.toFixed(2)}</div>`
+      : '';
+    div2.innerHTML=`
+      <div class="model-name">${m.name}</div>
+      <div class="prob-row"><span class="prob-label">Local</span><span class="prob-val" style="color:var(--blue)">${p(m.hw)}</span></div>
+      <div class="bar-bg"><div class="bar-fill bar-hw" style="width:${m.hw*100}%"></div></div>
+      <div class="prob-row"><span class="prob-label">Empate</span><span class="prob-val" style="color:var(--yellow)">${p(m.d)}</span></div>
+      <div class="bar-bg"><div class="bar-fill bar-d" style="width:${m.d*100}%"></div></div>
+      <div class="prob-row"><span class="prob-label">Visitante</span><span class="prob-val" style="color:var(--red)">${p(m.aw)}</span></div>
+      <div class="bar-bg"><div class="bar-fill bar-aw" style="width:${m.aw*100}%"></div></div>
+      ${lamLine}`;
+    ml.appendChild(div2);
+  });
+
+  // Top 5 scores
+  const top5=Object.entries(res.dcMat).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const sl=document.getElementById('scoreList');
+  sl.innerHTML=top5.map(([sc,prob])=>{
+    const [gl,ga]=sc.split('-').map(Number);
+    const tipo=gl>ga?'local':gl===ga?'empate':'visitante';
+    const tipoClass=`tipo-${tipo}`;
+    const tipoLabel=tipo==='local'?hk:tipo==='visitante'?ak:'Empate';
+    return `<div class="score-row">
+      <span class="score-tag">${hk} ${gl} — ${ga} ${ak}</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="score-pct">${(prob*100).toFixed(2)}%</span>
+        <span class="score-tipo ${tipoClass}">${tipoLabel}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Score matrix (5x5)
+  const mat=document.getElementById('scoreMatrix');
+  mat.innerHTML='';
+  const SHOW=5;
+  const maxP=Math.max(...Object.values(res.dcMat));
+  // header
+  const thead=document.createElement('tr');
+  const corner=document.createElement('th');
+  corner.className='corner';corner.textContent='L\\ V';
+  thead.appendChild(corner);
+  for(let a=0;a<SHOW;a++){const th=document.createElement('th');th.textContent=a;thead.appendChild(th);}
+  mat.appendChild(thead);
+  for(let h=0;h<SHOW;h++){
+    const tr=document.createElement('tr');
+    const th=document.createElement('th');th.textContent=h;tr.appendChild(th);
+    for(let a=0;a<SHOW;a++){
+      const prob=res.dcMat[`${h}-${a}`]||0;
+      const intensity=prob/maxP;
+      const td=document.createElement('td');
+      const r=Math.round(0+intensity*0);
+      const g=Math.round(80+intensity*132);
+      const b=Math.round(40+intensity*66);
+      td.style.background=`rgba(0,${Math.round(intensity*212)},${Math.round(intensity*106)},${0.1+intensity*0.7})`;
+      td.style.color=intensity>0.5?'#000':'var(--text)';
+      td.style.fontWeight=intensity>0.6?'700':'400';
+      td.textContent=`${(prob*100).toFixed(1)}`;
+      tr.appendChild(td);
+    }
+    mat.appendChild(tr);
+  }
+
+  document.getElementById('results').style.display='block';
+
+  // Auto-fill Kelly tab with consensus home win prob
+  document.getElementById('kP').value=(hw*100).toFixed(1);
+  if(ol>1) document.getElementById('kOdds').value=ol;
+  calcKelly();
+
+  // Auto-fill partido name in register form
+  document.getElementById('regPartido').value=`${hk} vs ${ak}`;
+}
+
+function p(v){ return (v*100).toFixed(1)+'%'; }
+
+// ══════════════════════════════════════════════════════════
+// KELLY CALCULATOR
+// ══════════════════════════════════════════════════════════
+function calcKelly() {
+  const prob=parseFloat(document.getElementById('kP').value)/100;
+  const odds=parseFloat(document.getElementById('kOdds').value);
+  const el=document.getElementById('kellyOut');
+  const state=loadState();
+  if(isNaN(prob)||isNaN(odds)||prob<=0||prob>=1||odds<=1){
+    el.className='kelly-result kelly-neu';
+    el.textContent='Ingresa probabilidad (1-99%) y cuota > 1.0';
+    return;
+  }
+  const b=odds-1, q=1-prob;
+  const kelly=(b*prob-q)/b;
+  const fair=1/prob;
+  const edge=(prob*odds-1)*100;
+  const quarter=kelly/4;
+  const bk=state.bankroll;
+
+  if(kelly<=0){
+    el.className='kelly-result kelly-neg';
+    el.innerHTML=`Sin valor — cuota justa: <b>${fair.toFixed(2)}</b>, mercado: <b>${odds}</b><br>
+    Edge: <b>${edge.toFixed(1)}%</b> — no apostar.`;
+  } else {
+    const bet=Math.max(0,quarter*bk);
+    el.className='kelly-result kelly-pos';
+    el.innerHTML=`Hay valor — cuota justa: <b>${fair.toFixed(2)}</b>, mercado: <b>${odds}</b><br>
+    Edge: <b>+${edge.toFixed(1)}%</b><br>
+    Kelly completo: <b>${(kelly*100).toFixed(1)}%</b> · 1/4 Kelly: <b>${(quarter*100).toFixed(1)}%</b><br>
+    Apuesta sugerida: <b>$${bet.toFixed(2)}</b> de $${bk.toFixed(2)}`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// BANKROLL — localStorage
+// ══════════════════════════════════════════════════════════
+function loadState() {
+  try {
+    const s=localStorage.getItem('mundial_bk');
+    return s ? JSON.parse(s) : {bankroll:1000, historial:[]};
+  } catch(e) { return {bankroll:1000, historial:[]}; }
+}
+function saveState(s) {
+  localStorage.setItem('mundial_bk', JSON.stringify(s));
+}
+function updateBadge() {
+  const s=loadState();
+  document.getElementById('bankrollBadge').textContent=`$${s.bankroll.toFixed(2)}`;
+  document.getElementById('bkAmount').textContent=`$${s.bankroll.toLocaleString('es',{minimumFractionDigits:2})}`;
+  const diff=s.bankroll-1000;
+  const pct=diff/10;
+  const plEl=document.getElementById('bkPL');
+  plEl.style.color=diff>=0?'var(--green)':'var(--red)';
+  plEl.textContent=`P/L: ${diff>=0?'+':''}$${diff.toFixed(2)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`;
+}
+function registerBet() {
+  const partido=document.getElementById('regPartido').value.trim();
+  const tipo=document.getElementById('regTipo').value;
+  const resultado=document.getElementById('regResult').value;
+  const monto=parseFloat(document.getElementById('regMonto').value);
+  const cuota=parseFloat(document.getElementById('regCuota').value);
+  if(!partido||isNaN(monto)||isNaN(cuota)||monto<=0||cuota<=1){
+    alert('Completa todos los campos correctamente.');
+    return;
+  }
+  const estado=loadState();
+  if(monto>estado.bankroll){
+    alert(`No tienes suficiente bankroll ($${estado.bankroll.toFixed(2)})`);
+    return;
+  }
+  const ganado=resultado===tipo;
+  const beneficio=ganado ? monto*(cuota-1) : -monto;
+  const nuevoBank=estado.bankroll+beneficio;
+  estado.bankroll=Math.max(0,nuevoBank);
+  estado.historial.push({
+    partido, tipo, resultado, monto, cuota,
+    beneficio:+beneficio.toFixed(2),
+    bankroll:+estado.bankroll.toFixed(2),
+    ts: new Date().toLocaleDateString('es')
+  });
+  saveState(estado);
+  updateBadge();
+  document.getElementById('regMonto').value='';
+  document.getElementById('regCuota').value='';
+  const txt=ganado
+    ? `Ganaste $${beneficio.toFixed(2)}! Bankroll: $${estado.bankroll.toFixed(2)}`
+    : `Perdiste $${Math.abs(beneficio).toFixed(2)}. Bankroll: $${estado.bankroll.toFixed(2)}`;
+  alert(txt);
+}
+function resetBankroll() {
+  if(!confirm('Reiniciar bankroll a $1000? Se mantiene el historial.')) return;
+  const s=loadState(); s.bankroll=1000; saveState(s); updateBadge();
+}
+
+// ══════════════════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════════════════
+function renderStats() {
+  const s=loadState();
+  const h=s.historial;
+  if(!h.length){
+    document.getElementById('histList').innerHTML=
+      '<div class="empty-state">Sin apuestas registradas aun</div>';
+    return;
+  }
+  const total=h.length;
+  const ganadas=h.filter(e=>e.beneficio>0).length;
+  const roi=h.reduce((s,e)=>s+e.beneficio,0)/h.reduce((s,e)=>s+e.monto,0)*100;
+  // Streak
+  let racha=0, tipoRacha=null;
+  for(let i=h.length-1;i>=0;i--){
+    const t=h[i].beneficio>0?'G':'P';
+    if(!tipoRacha){tipoRacha=t;racha=1;}
+    else if(t===tipoRacha) racha++;
+    else break;
+  }
+  document.getElementById('sRoi').textContent=`${roi>=0?'+':''}${roi.toFixed(1)}%`;
+  document.getElementById('sRoi').className=`stat-val ${roi>=0?'green':'red'}`;
+  document.getElementById('sTasa').textContent=`${(ganadas/total*100).toFixed(0)}%`;
+  document.getElementById('sTotal').textContent=total;
+  document.getElementById('sRacha').textContent=`${racha}${tipoRacha==='G'?'G':'P'}`;
+  document.getElementById('sRacha').className=`stat-val ${tipoRacha==='G'?'green':'red'}`;
+
+  // History list (newest first)
+  document.getElementById('histList').innerHTML=
+    [...h].reverse().map(e=>`
+    <div class="hist-item">
+      <div>
+        <div class="hist-partido">${e.partido}</div>
+        <div class="hist-meta">${e.tipo} · cuota ${e.cuota} · $${e.monto} · ${e.ts||''}</div>
+      </div>
+      <div class="hist-pl ${e.beneficio>0?'pl-pos':'pl-neg'}">
+        ${e.beneficio>0?'+':''}$${e.beneficio.toFixed(2)}
+      </div>
+    </div>`).join('');
+}
+
+function clearHistory() {
+  if(!confirm('Borrar todo el historial?')) return;
+  const s=loadState(); s.historial=[]; saveState(s); renderStats();
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+updateBadge();
+runPrediction(); // load default prediction on open
+</script>
+</body>
+</html>
