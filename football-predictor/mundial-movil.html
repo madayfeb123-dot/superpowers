@@ -2,814 +2,964 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#08080f">
-<title>Mundial 2026 — Predictor</title>
+<meta name="theme-color" content="#07070d">
+<title>Mundial 2026 — Predictor Matemático</title>
 <style>
 :root{
-  --bg:#08080f; --s1:#111119; --s2:#1a1a26; --s3:#22222f;
-  --border:#2c2c3e; --text:#e8e8f2; --muted:#6a6a85;
+  --bg:#07070d; --s1:#10101a; --s2:#191926; --s3:#222232;
+  --border:#2b2b40; --text:#eaeaf5; --muted:#7c7c9a;
   --green:#00d46a; --blue:#4da6ff; --red:#ff453a;
   --orange:#ff9f0a; --purple:#bf5af2; --yellow:#ffd60a;
-  --nav:64px; --hdr:52px;
+  --nav:62px; --hdr:54px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   font-size:15px;line-height:1.45;}
 
-/* ── LAYOUT ── */
 header{
-  position:fixed;top:0;left:0;right:0;height:var(--hdr);
-  background:rgba(8,8,15,0.9);backdrop-filter:blur(12px);
+  position:fixed;top:0;left:0;right:0;height:calc(var(--hdr) + env(safe-area-inset-top,0px));
+  padding-top:env(safe-area-inset-top,0px);
+  background:rgba(7,7,13,.92);backdrop-filter:blur(14px);
   border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 16px;z-index:50;
-  justify-content:space-between;
+  display:flex;align-items:center;justify-content:space-between;
+  padding-left:16px;padding-right:16px;z-index:50;
 }
-header h1{font-size:1rem;font-weight:700;color:var(--blue);letter-spacing:-.02em;}
-header span{font-size:.7rem;color:var(--muted);}
-#bankrollBadge{
-  background:var(--s2);border:1px solid var(--border);
-  border-radius:20px;padding:4px 10px;font-size:.75rem;
-  color:var(--green);font-weight:700;
-}
-main{
-  position:fixed;top:var(--hdr);bottom:var(--nav);left:0;right:0;
-  overflow-y:auto;-webkit-overflow-scrolling:touch;
-}
-.tab{display:none;padding:16px 14px 8px;}
+header h1{font-size:1rem;font-weight:800;color:var(--blue);letter-spacing:-.02em;}
+header .sub{font-size:.68rem;color:var(--muted);}
+#bkBadge{background:var(--s2);border:1px solid var(--border);border-radius:20px;
+  padding:4px 11px;font-size:.78rem;color:var(--green);font-weight:700;}
+
+main{position:fixed;left:0;right:0;
+  top:calc(var(--hdr) + env(safe-area-inset-top,0px));
+  bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px));
+  overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.tab{display:none;padding:14px 13px 20px;}
 .tab.active{display:block;}
-nav.bottom-nav{
-  position:fixed;bottom:0;left:0;right:0;height:var(--nav);
-  background:rgba(8,8,15,0.95);backdrop-filter:blur(12px);
+
+nav.bnav{position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--nav) + env(safe-area-inset-bottom,0px));
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:rgba(7,7,13,.95);backdrop-filter:blur(14px);
   border-top:1px solid var(--border);
-  display:grid;grid-template-columns:repeat(3,1fr);
-  padding-bottom:env(safe-area-inset-bottom,0);z-index:50;
-}
-.nav-btn{
-  display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:3px;border:none;background:none;
-  color:var(--muted);font-size:.62rem;cursor:pointer;
-  transition:color .2s;padding:0;
-}
-.nav-btn.active{color:var(--blue);}
-.nav-btn svg{width:22px;height:22px;stroke-width:1.8;}
-.nav-btn.active svg{stroke:var(--blue);}
+  display:grid;grid-template-columns:repeat(3,1fr);z-index:50;}
+.nbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;border:none;background:none;color:var(--muted);font-size:.62rem;
+  cursor:pointer;transition:color .15s;font-weight:600;}
+.nbtn.active{color:var(--blue);}
+.nbtn svg{width:22px;height:22px;stroke-width:1.8;}
 
-/* ── CARDS ── */
-.card{
-  background:var(--s1);border:1px solid var(--border);
-  border-radius:14px;padding:14px;margin-bottom:12px;
-}
-.card-title{
-  font-size:.7rem;font-weight:600;color:var(--muted);
-  text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;
-}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:14px;
+  padding:14px;margin-bottom:12px;}
+.ct{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.07em;margin-bottom:10px;}
+.sect{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.07em;margin:16px 0 8px;padding-left:2px;}
+.hint{font-size:.72rem;color:var(--muted);margin-bottom:10px;line-height:1.5;}
 
-/* ── TEAM SELECTOR ── */
-.match-selector{
-  display:grid;grid-template-columns:1fr 36px 1fr;gap:8px;
-  align-items:end;margin-bottom:12px;
-}
-.vs-circle{
-  width:36px;height:36px;border-radius:50%;
-  background:var(--s2);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-size:.65rem;font-weight:700;color:var(--muted);
-}
-label.field-lbl{font-size:.72rem;color:var(--muted);display:block;margin-bottom:4px;}
-select.team-sel, input.field-in{
-  width:100%;background:var(--s2);color:var(--text);
-  border:1px solid var(--border);border-radius:10px;
-  padding:10px 10px;font-size:.9rem;outline:none;
-  appearance:none;-webkit-appearance:none;
-}
-select.team-sel:focus, input.field-in:focus{border-color:var(--blue);}
+/* selector */
+.msel{display:grid;grid-template-columns:1fr 34px 1fr;gap:8px;align-items:end;margin-bottom:12px;}
+.vsc{width:34px;height:34px;border-radius:50%;background:var(--s2);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:.62rem;font-weight:800;color:var(--muted);}
+label.fl{font-size:.72rem;color:var(--muted);display:block;margin-bottom:4px;font-weight:600;}
+select.fi,input.fi{width:100%;background:var(--s2);color:var(--text);
+  border:1px solid var(--border);border-radius:10px;padding:11px 10px;
+  font-size:16px;outline:none;appearance:none;-webkit-appearance:none;}
+select.fi:focus,input.fi:focus{border-color:var(--blue);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.olbl{font-size:.64rem;color:var(--muted);text-align:center;display:block;margin-bottom:3px;font-weight:600;}
 
-/* Optional odds row */
-.odds-row{
-  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
-  margin-bottom:12px;
-}
-.odds-row .field-in{font-size:.85rem;padding:8px;}
-.odds-label{font-size:.65rem;color:var(--muted);text-align:center;display:block;margin-bottom:3px;}
+.btn{width:100%;background:var(--blue);color:#000;border:none;border-radius:12px;
+  padding:14px;font-size:.95rem;font-weight:800;cursor:pointer;transition:opacity .15s;}
+.btn:active{opacity:.65;}
+.btn2{width:100%;background:var(--s2);color:var(--text);border:1px solid var(--border);
+  border-radius:12px;padding:11px;font-size:.85rem;font-weight:600;cursor:pointer;margin-bottom:8px;}
+.btn2:active{opacity:.65;}
+.btnD{background:rgba(255,69,58,.12);border:1px solid var(--red);color:var(--red);
+  border-radius:10px;padding:9px 16px;font-size:.8rem;cursor:pointer;font-weight:600;}
 
-/* Main CTA button */
-.btn-primary{
-  width:100%;background:var(--blue);color:#000;border:none;
-  border-radius:12px;padding:13px;font-size:.95rem;font-weight:700;
-  cursor:pointer;transition:opacity .15s;margin-bottom:14px;
-}
-.btn-primary:active{opacity:.7;}
-.btn-secondary{
-  width:100%;background:var(--s2);color:var(--text);border:1px solid var(--border);
-  border-radius:12px;padding:11px;font-size:.85rem;font-weight:600;
-  cursor:pointer;transition:opacity .15s;margin-bottom:10px;
-}
-.btn-secondary:active{opacity:.7;}
-.btn-danger{
-  background:rgba(255,69,58,.15);border:1px solid var(--red);
-  color:var(--red);border-radius:10px;padding:8px 14px;font-size:.8rem;
-  cursor:pointer;border-radius:10px;
-}
-.btn-danger:active{opacity:.7;}
+/* toggles */
+.toggle-row{display:flex;gap:6px;margin-bottom:10px;}
+.tg{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:10px;
+  padding:9px 4px;font-size:.72rem;color:var(--muted);text-align:center;cursor:pointer;
+  font-weight:600;transition:all .15s;}
+.tg.on{background:rgba(77,166,255,.14);border-color:var(--blue);color:var(--blue);}
 
-/* ── CONSENSUS (big display) ── */
-.consensus-card{
-  background:linear-gradient(135deg,rgba(77,166,255,.08),rgba(0,212,106,.08));
-  border:1px solid var(--blue);border-radius:14px;padding:14px;margin-bottom:12px;
-}
-.consensus-title{font-size:.7rem;color:var(--blue);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
-.cons-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
-.cons-item .big{font-size:1.6rem;font-weight:800;}
-.cons-item .lbl{font-size:.7rem;color:var(--muted);}
-.cons-winner .big{color:var(--green);}
-.cons-winner .lbl{color:var(--green);}
-.div-badge{
-  margin-top:10px;text-align:center;font-size:.72rem;
-  padding:4px 10px;border-radius:20px;display:inline-block;
-}
-.div-low{background:rgba(0,212,106,.12);color:var(--green);}
-.div-high{background:rgba(255,159,10,.12);color:var(--orange);}
+/* consensus */
+.cons{background:linear-gradient(135deg,rgba(77,166,255,.09),rgba(0,212,106,.07));
+  border:1px solid var(--blue);border-radius:14px;padding:14px;margin-bottom:12px;}
+.cons .ct{color:var(--blue);}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+.ci .big{font-size:1.55rem;font-weight:800;}
+.ci .lbl{font-size:.66rem;color:var(--muted);line-height:1.3;}
+.cw .big,.cw .lbl{color:var(--green);}
+.divb{margin-top:10px;text-align:center;}
+.divb span{font-size:.7rem;padding:4px 11px;border-radius:20px;display:inline-block;}
+.dlow{background:rgba(0,212,106,.12);color:var(--green);}
+.dhigh{background:rgba(255,159,10,.12);color:var(--orange);}
 
-/* ── MODEL CARDS ── */
-.models-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
-.model-item{
-  background:var(--s2);border:1px solid var(--border);
-  border-radius:12px;padding:12px;
-}
-.model-name{font-size:.7rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
-.prob-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
-.prob-label{font-size:.78rem;color:var(--muted);}
-.prob-val{font-size:.9rem;font-weight:700;}
-.bar-bg{height:4px;background:var(--s3);border-radius:2px;margin-bottom:6px;overflow:hidden;}
-.bar-fill{height:4px;border-radius:2px;transition:width .5s ease;}
-.bar-hw{background:var(--blue);}
-.bar-d{background:var(--yellow);}
-.bar-aw{background:var(--red);}
-.model-footer{font-size:.7rem;color:var(--muted);text-align:center;margin-top:4px;}
+/* knockout advance */
+.adv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.advbox{background:var(--s2);border-radius:10px;padding:10px;text-align:center;}
+.advbox .v{font-size:1.2rem;font-weight:800;color:var(--purple);}
+.advbox .l{font-size:.64rem;color:var(--muted);}
 
-/* ── SCORE MATRIX ── */
-.matrix-wrap{overflow-x:auto;margin-top:2px;}
-.score-mat{border-collapse:collapse;font-size:.7rem;width:100%;}
-.score-mat th,.score-mat td{
-  width:42px;height:30px;text-align:center;
-  border:1px solid var(--border);
-}
-.score-mat th{background:var(--s2);color:var(--muted);font-weight:600;font-size:.65rem;}
-.score-mat .corner{background:var(--s2);color:var(--muted);font-size:.6rem;}
-.mat-axis{font-size:.65rem;color:var(--muted);text-align:center;margin-top:4px;}
+/* models */
+.mlist{display:flex;flex-direction:column;gap:8px;}
+.mi{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:12px;}
+.mn{font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;margin-bottom:8px;}
+.pr{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.pl{font-size:.76rem;color:var(--muted);}
+.pv{font-size:.88rem;font-weight:700;}
+.bb{height:4px;background:var(--s3);border-radius:2px;margin-bottom:6px;overflow:hidden;}
+.bf{height:4px;border-radius:2px;transition:width .5s ease;}
+.b1{background:var(--blue);} .b2{background:var(--yellow);} .b3{background:var(--red);}
+.mf{font-size:.68rem;color:var(--muted);text-align:center;margin-top:4px;}
 
-/* Top marcadores */
-.score-list{display:flex;flex-direction:column;gap:6px;}
-.score-row{
-  display:flex;justify-content:space-between;align-items:center;
-  background:var(--s2);border-radius:8px;padding:8px 12px;
-}
-.score-tag{font-weight:700;font-size:.9rem;}
-.score-pct{font-size:.8rem;color:var(--muted);}
-.score-tipo{font-size:.65rem;padding:2px 7px;border-radius:10px;}
-.tipo-local{background:rgba(77,166,255,.15);color:var(--blue);}
-.tipo-empate{background:rgba(255,214,10,.15);color:var(--yellow);}
-.tipo-visitante{background:rgba(255,69,58,.15);color:var(--red);}
+/* markets */
+.mkts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.mkt{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:11px;text-align:center;}
+.mkt .v{font-size:1.25rem;font-weight:800;}
+.mkt .l{font-size:.66rem;color:var(--muted);margin-top:2px;line-height:1.3;}
 
-/* ── BANKROLL ── */
-.bankroll-hero{
-  background:linear-gradient(135deg,rgba(0,212,106,.1),rgba(77,166,255,.08));
-  border:1px solid rgba(0,212,106,.3);border-radius:14px;
-  padding:18px;margin-bottom:12px;text-align:center;
-}
-.bk-amount{font-size:2.2rem;font-weight:800;color:var(--green);}
-.bk-label{font-size:.75rem;color:var(--muted);margin-top:2px;}
-.bk-pl{font-size:.85rem;margin-top:4px;}
+/* score list & matrix */
+.slist{display:flex;flex-direction:column;gap:6px;}
+.srow{display:flex;justify-content:space-between;align-items:center;
+  background:var(--s2);border-radius:8px;padding:9px 12px;}
+.stag{font-weight:700;font-size:.86rem;}
+.spct{font-size:.8rem;color:var(--muted);}
+.stipo{font-size:.62rem;padding:2px 8px;border-radius:10px;font-weight:600;}
+.tL{background:rgba(77,166,255,.15);color:var(--blue);}
+.tE{background:rgba(255,214,10,.15);color:var(--yellow);}
+.tV{background:rgba(255,69,58,.15);color:var(--red);}
+.mwrap{overflow-x:auto;}
+.smat{border-collapse:collapse;font-size:.68rem;width:100%;}
+.smat th,.smat td{width:40px;height:30px;text-align:center;border:1px solid var(--border);}
+.smat th{background:var(--s2);color:var(--muted);font-weight:700;font-size:.62rem;}
+.maxis{font-size:.64rem;color:var(--muted);text-align:center;margin-top:5px;}
 
-.kelly-result{
-  border-radius:10px;padding:12px;margin-top:8px;font-size:.82rem;
-  line-height:1.7;
-}
-.kelly-pos{background:rgba(0,212,106,.1);border:1px solid rgba(0,212,106,.3);}
-.kelly-neg{background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.3);}
-.kelly-neu{background:var(--s2);border:1px solid var(--border);color:var(--muted);}
+/* value scanner */
+.vrow{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;
+  background:var(--s2);border-radius:10px;padding:10px 12px;margin-bottom:6px;
+  border:1px solid transparent;}
+.vrow.best{border-color:var(--green);background:rgba(0,212,106,.08);}
+.vrow .o{font-size:.78rem;font-weight:700;min-width:62px;}
+.vrow .det{font-size:.68rem;color:var(--muted);}
+.vrow .edge{font-size:.82rem;font-weight:800;}
+.vrow .stake{font-size:.74rem;font-weight:700;color:var(--green);}
+.ep{color:var(--green);} .en{color:var(--red);}
 
-/* Register form */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
-.form-grid.full{grid-template-columns:1fr;}
-select.field-in{padding:10px;}
+/* bankroll */
+.bhero{background:linear-gradient(135deg,rgba(0,212,106,.1),rgba(77,166,255,.07));
+  border:1px solid rgba(0,212,106,.3);border-radius:14px;padding:16px;margin-bottom:12px;text-align:center;}
+.bka{font-size:2.1rem;font-weight:800;color:var(--green);}
+.bkl{font-size:.72rem;color:var(--muted);margin-top:2px;}
+.bkp{font-size:.84rem;margin-top:4px;font-weight:600;}
+#chart{width:100%;height:70px;margin-top:10px;}
 
-/* ── STATS ── */
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
-.stat-box{
-  background:var(--s1);border:1px solid var(--border);border-radius:12px;
-  padding:12px;text-align:center;
-}
-.stat-val{font-size:1.4rem;font-weight:800;}
-.stat-lbl{font-size:.7rem;color:var(--muted);margin-top:2px;}
-.green{color:var(--green);} .blue{color:var(--blue);}
-.red{color:var(--red);} .orange{color:var(--orange);}
+.kout{border-radius:10px;padding:12px;margin-top:8px;font-size:.8rem;line-height:1.7;}
+.kp{background:rgba(0,212,106,.1);border:1px solid rgba(0,212,106,.3);}
+.kn{background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.3);}
+.ku{background:var(--s2);border:1px solid var(--border);color:var(--muted);}
 
-/* History list */
-.hist-item{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:10px 12px;background:var(--s1);border-radius:10px;
-  border:1px solid var(--border);margin-bottom:7px;
-}
-.hist-partido{font-size:.8rem;font-weight:600;}
-.hist-meta{font-size:.7rem;color:var(--muted);margin-top:1px;}
-.hist-pl{font-size:.9rem;font-weight:700;}
-.pl-pos{color:var(--green);} .pl-neg{color:var(--red);}
-.empty-state{text-align:center;color:var(--muted);padding:30px 0;font-size:.85rem;}
-
-/* Section divider */
-.section-header{
-  font-size:.7rem;font-weight:600;color:var(--muted);
-  text-transform:uppercase;letter-spacing:.06em;
-  margin:14px 0 8px;padding-left:2px;
-}
-.hint{font-size:.72rem;color:var(--muted);margin-bottom:10px;}
+/* stats */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sbox{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+.sv{font-size:1.35rem;font-weight:800;}
+.sl{font-size:.66rem;color:var(--muted);margin-top:2px;}
+.green{color:var(--green);} .blue{color:var(--blue);} .red{color:var(--red);} .orange{color:var(--orange);}
+.hi{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;
+  background:var(--s1);border-radius:10px;border:1px solid var(--border);margin-bottom:7px;}
+.hp{font-size:.8rem;font-weight:600;}
+.hm{font-size:.68rem;color:var(--muted);margin-top:1px;}
+.hpl{font-size:.88rem;font-weight:800;}
+.empty{text-align:center;color:var(--muted);padding:28px 0;font-size:.84rem;}
+.foot{font-size:.64rem;color:var(--muted);text-align:center;margin-top:18px;line-height:1.6;
+  border-top:1px solid var(--border);padding-top:12px;}
 </style>
 </head>
 <body>
 
 <header>
-  <div>
-    <h1>Mundial 2026</h1>
-    <span>Predictor Matemático</span>
-  </div>
-  <div id="bankrollBadge">$1000.00</div>
+  <div><h1>Mundial 2026</h1><div class="sub">48 selecciones · 5 modelos</div></div>
+  <div id="bkBadge">$1000.00</div>
 </header>
 
 <main>
 
-<!-- ══════════ TAB 1: PARTIDO ══════════ -->
+<!-- ════════ TAB PARTIDO ════════ -->
 <section id="tab-partido" class="tab active">
 
   <div class="card">
-    <div class="card-title">Seleccionar Partido</div>
-    <div class="match-selector">
-      <div>
-        <label class="field-lbl">Local</label>
-        <select id="homeTeam" class="team-sel"></select>
-      </div>
-      <div class="vs-circle">VS</div>
-      <div>
-        <label class="field-lbl">Visitante</label>
-        <select id="awayTeam" class="team-sel"></select>
-      </div>
+    <div class="ct">Partido</div>
+    <div class="msel">
+      <div><label class="fl">Equipo A</label><select id="tH" class="fi"></select></div>
+      <div class="vsc">VS</div>
+      <div><label class="fl">Equipo B</label><select id="tA" class="fi"></select></div>
     </div>
 
-    <div class="card-title" style="margin-bottom:6px;">Cuotas del mercado (opcional)</div>
-    <p class="hint">Añade las cuotas para activar el modelo de cuotas implícitas y Kelly.</p>
-    <div class="odds-row">
-      <div>
-        <span class="odds-label">Local</span>
-        <input id="ol" type="number" class="field-in" placeholder="2.10" step="0.01">
-      </div>
-      <div>
-        <span class="odds-label">Empate</span>
-        <input id="oe" type="number" class="field-in" placeholder="3.40" step="0.01">
-      </div>
-      <div>
-        <span class="odds-label">Visit.</span>
-        <input id="ov" type="number" class="field-in" placeholder="3.20" step="0.01">
-      </div>
+    <label class="fl">Fase</label>
+    <div class="toggle-row">
+      <div class="tg on" id="tgGrupo" onclick="setFase('grupo')">Fase de grupos</div>
+      <div class="tg" id="tgKO" onclick="setFase('ko')">Eliminatoria directa</div>
     </div>
 
-    <button class="btn-primary" onclick="runPrediction()">CALCULAR PREDICCION</button>
+    <label class="fl">Sede</label>
+    <div class="toggle-row">
+      <div class="tg on" id="tgAuto" onclick="setSede('auto')">Auto (anfitrión)</div>
+      <div class="tg" id="tgNeu" onclick="setSede('neutral')">Neutral</div>
+    </div>
+    <p class="hint" id="sedeHint"></p>
+
+    <div class="ct" style="margin-bottom:6px">Cuotas del mercado (opcional)</div>
+    <div class="row3">
+      <div><span class="olbl">Gana A</span><input id="oH" type="number" inputmode="decimal" class="fi" placeholder="2.10" step="0.01" min="1.01"></div>
+      <div><span class="olbl">Empate</span><input id="oD" type="number" inputmode="decimal" class="fi" placeholder="3.40" step="0.01" min="1.01"></div>
+      <div><span class="olbl">Gana B</span><input id="oA" type="number" inputmode="decimal" class="fi" placeholder="3.20" step="0.01" min="1.01"></div>
+    </div>
+
+    <button class="btn" onclick="runPrediction()">CALCULAR PREDICCIÓN</button>
   </div>
 
-  <!-- Results (hidden until calculated) -->
   <div id="results" style="display:none">
-
-    <div id="consensusCard" class="consensus-card"></div>
-
-    <div class="section-header">Por modelo</div>
-    <div id="modelsList" class="models-list"></div>
-
-    <div class="section-header">Marcadores mas probables (Dixon-Coles)</div>
-    <div id="scoreList" class="card score-list"></div>
-
-    <div class="section-header">Matriz de probabilidad (0-4 goles)</div>
+    <div id="consCard" class="cons"></div>
+    <div id="valueCard" style="display:none">
+      <div class="sect">Escáner de valor (modelo vs mercado)</div>
+      <div class="card" id="valueList"></div>
+    </div>
+    <div class="sect">Mercados derivados (Dixon-Coles)</div>
+    <div class="mkts" id="mktGrid"></div>
+    <div class="sect">Marcadores más probables</div>
+    <div class="card slist" id="scoreList"></div>
+    <div class="sect">Matriz de marcadores (%)</div>
     <div class="card">
-      <div class="matrix-wrap">
-        <table id="scoreMatrix" class="score-mat"></table>
-      </div>
-      <div class="mat-axis">Goles visitante --&gt; / &darr; Goles local</div>
+      <div class="mwrap"><table id="smat" class="smat"></table></div>
+      <div class="maxis">Goles B → / ↓ Goles A</div>
     </div>
+    <div class="sect">Detalle por modelo</div>
+    <div class="mlist" id="mList"></div>
+  </div>
 
+  <div class="foot">
+    Simulación en papel con fines educativos. Ratings estimados a inicio del torneo —
+    ajústalos en el código (objeto TEAMS) según la forma real de cada selección.
+    Ningún modelo elimina la varianza del fútbol: gestiona el riesgo con ¼ Kelly.
   </div>
 </section>
 
-<!-- ══════════ TAB 2: KELLY / APUESTA ══════════ -->
-<section id="tab-kelly" class="tab">
+<!-- ════════ TAB APUESTA ════════ -->
+<section id="tab-apuesta" class="tab">
 
-  <div id="bankrollHero" class="bankroll-hero">
-    <div class="bk-amount" id="bkAmount">$1,000.00</div>
-    <div class="bk-label">Bankroll actual</div>
-    <div class="bk-pl" id="bkPL" style="color:var(--muted)">P/L: $0.00 (0.00%)</div>
+  <div class="bhero">
+    <div class="bka" id="bkA">$1,000.00</div>
+    <div class="bkl">Bankroll (papel)</div>
+    <div class="bkp" id="bkP" style="color:var(--muted)">P/L: $0.00 (0.0%)</div>
+    <canvas id="chart"></canvas>
   </div>
 
-  <!-- Kelly calculator -->
   <div class="card">
-    <div class="card-title">Calculadora Kelly (1/4 Kelly)</div>
-    <div class="form-grid">
-      <div>
-        <label class="field-lbl">Probabilidad %</label>
-        <input id="kP" type="number" class="field-in" placeholder="60" min="1" max="99" oninput="calcKelly()">
-      </div>
-      <div>
-        <label class="field-lbl">Cuota decimal</label>
-        <input id="kOdds" type="number" class="field-in" placeholder="2.10" step="0.01" oninput="calcKelly()">
-      </div>
+    <div class="ct">Calculadora Kelly (¼ fraccional)</div>
+    <div class="row2">
+      <div><label class="fl">Probabilidad %</label>
+        <input id="kP" type="number" inputmode="decimal" class="fi" placeholder="60" min="1" max="99" oninput="calcKelly()"></div>
+      <div><label class="fl">Cuota decimal</label>
+        <input id="kO" type="number" inputmode="decimal" class="fi" placeholder="2.10" step="0.01" oninput="calcKelly()"></div>
     </div>
-    <div id="kellyOut" class="kelly-result kelly-neu">
-      Ingresa la probabilidad del modelo y la cuota del mercado.
-    </div>
+    <div id="kOut" class="kout ku">Calcula un partido o ingresa los valores manualmente.</div>
   </div>
 
-  <!-- Register bet -->
   <div class="card">
-    <div class="card-title">Registrar Apuesta</div>
-    <p class="hint">Registra la apuesta y el resultado para actualizar el bankroll.</p>
-
-    <div class="form-grid full">
-      <div>
-        <label class="field-lbl">Partido (texto libre)</label>
-        <input id="regPartido" type="text" class="field-in" placeholder="Argentina vs Brasil">
-      </div>
+    <div class="ct">Registrar apuesta (papel)</div>
+    <div class="row2" style="grid-template-columns:1fr">
+      <div><label class="fl">Partido</label>
+        <input id="rP" type="text" class="fi" placeholder="México vs Argentina"></div>
     </div>
-    <div class="form-grid">
-      <div>
-        <label class="field-lbl">Aposté a</label>
-        <select id="regTipo" class="field-in">
-          <option value="local">Local</option>
+    <div class="row2">
+      <div><label class="fl">Aposté a</label>
+        <select id="rT" class="fi">
+          <option value="local">Equipo A</option>
           <option value="empate">Empate</option>
-          <option value="visitante">Visitante</option>
-        </select>
-      </div>
-      <div>
-        <label class="field-lbl">Resultado real</label>
-        <select id="regResult" class="field-in">
-          <option value="local">Local gano</option>
+          <option value="visitante">Equipo B</option>
+        </select></div>
+      <div><label class="fl">Resultado real</label>
+        <select id="rR" class="fi">
+          <option value="local">Ganó A</option>
           <option value="empate">Empate</option>
-          <option value="visitante">Visitante gano</option>
-        </select>
-      </div>
+          <option value="visitante">Ganó B</option>
+        </select></div>
     </div>
-    <div class="form-grid">
-      <div>
-        <label class="field-lbl">Monto apostado $</label>
-        <input id="regMonto" type="number" class="field-in" placeholder="50">
-      </div>
-      <div>
-        <label class="field-lbl">Cuota jugada</label>
-        <input id="regCuota" type="number" class="field-in" placeholder="2.10" step="0.01">
-      </div>
+    <div class="row2">
+      <div><label class="fl">Monto $</label>
+        <input id="rM" type="number" inputmode="decimal" class="fi" placeholder="50" min="0.01" step="0.01"></div>
+      <div><label class="fl">Cuota jugada</label>
+        <input id="rC" type="number" inputmode="decimal" class="fi" placeholder="2.10" min="1.01" step="0.01"></div>
     </div>
-    <button class="btn-primary" onclick="registerBet()">GUARDAR Y ACTUALIZAR BANKROLL</button>
-    <button class="btn-secondary" onclick="resetBankroll()">Reiniciar bankroll a $1000</button>
+    <button class="btn" onclick="registerBet()">GUARDAR RESULTADO</button>
+    <div style="height:8px"></div>
+    <button class="btn2" onclick="resetBank()">Reiniciar bankroll a $1000</button>
   </div>
 
 </section>
 
-<!-- ══════════ TAB 3: ESTADÍSTICAS ══════════ -->
+<!-- ════════ TAB STATS ════════ -->
 <section id="tab-stats" class="tab">
-
-  <div id="statsGrid" class="stats-grid">
-    <div class="stat-box"><div class="stat-val green" id="sRoi">0.00%</div><div class="stat-lbl">ROI</div></div>
-    <div class="stat-box"><div class="stat-val blue" id="sTasa">—</div><div class="stat-lbl">Tasa acierto</div></div>
-    <div class="stat-box"><div class="stat-val orange" id="sTotal">0</div><div class="stat-lbl">Apuestas</div></div>
-    <div class="stat-box"><div class="stat-val" id="sRacha">—</div><div class="stat-lbl">Racha</div></div>
+  <div class="sgrid">
+    <div class="sbox"><div class="sv green" id="sRoi">—</div><div class="sl">ROI</div></div>
+    <div class="sbox"><div class="sv blue" id="sAc">—</div><div class="sl">Tasa de acierto</div></div>
+    <div class="sbox"><div class="sv orange" id="sN">0</div><div class="sl">Apuestas</div></div>
+    <div class="sbox"><div class="sv" id="sStreak">—</div><div class="sl">Racha actual</div></div>
+  </div>
+  <div class="sgrid">
+    <div class="sbox"><div class="sv green" id="sBest">—</div><div class="sl">Mejor apuesta</div></div>
+    <div class="sbox"><div class="sv red" id="sWorst">—</div><div class="sl">Peor apuesta</div></div>
   </div>
 
-  <div class="section-header">Historial</div>
-  <div id="histList"></div>
-  <div style="text-align:center;margin-top:8px;margin-bottom:16px;">
-    <button class="btn-danger" onclick="clearHistory()">Borrar historial</button>
+  <div class="sect">Respaldo de datos</div>
+  <div class="card">
+    <button class="btn2" onclick="exportData()">Exportar historial (JSON)</button>
+    <button class="btn2" onclick="document.getElementById('impFile').click()">Importar historial</button>
+    <input id="impFile" type="file" accept=".json,application/json" style="display:none" onchange="importData(event)">
   </div>
 
+  <div class="sect">Historial</div>
+  <div id="hList"></div>
+  <div style="text-align:center;margin:10px 0 16px">
+    <button class="btnD" onclick="clearHist()">Borrar historial</button>
+  </div>
 </section>
 </main>
 
-<nav class="bottom-nav">
-  <button class="nav-btn active" id="nav-partido" onclick="showTab('partido')">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 6l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z" stroke-width="1.5"/></svg>
-    Partido
-  </button>
-  <button class="nav-btn" id="nav-kelly" onclick="showTab('kelly')">
+<nav class="bnav">
+  <button class="nbtn active" id="nb-partido" onclick="showTab('partido')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7l2.4 1.7-.9 2.8h-3l-.9-2.8z" stroke-width="1.4"/></svg>
+    Partido</button>
+  <button class="nbtn" id="nb-apuesta" onclick="showTab('apuesta')">
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M8 6V4M16 6V4"/></svg>
-    Apuesta
-  </button>
-  <button class="nav-btn" id="nav-stats" onclick="showTab('stats')">
+    Apuesta</button>
+  <button class="nbtn" id="nb-stats" onclick="showTab('stats')">
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 20h18M7 20V10M12 20V4M17 20v-6"/></svg>
-    Stats
-  </button>
+    Stats</button>
 </nav>
 
 <script>
-// ══════════════════════════════════════════════════════════
-// DATA
-// ══════════════════════════════════════════════════════════
+"use strict";
+
+/* ═══════════════════════════════════════════════════════════════
+   DATOS — 48 selecciones del Mundial 2026
+   (elo, atk, def) en la misma escala del agente MCP:
+   elo ~1500-1950 · atk = multiplicador ofensivo · def = multiplicador
+   de goles concedidos (menor = mejor defensa).
+   Equipos marcados "po:true" llegaron vía repechaje (marzo 2026):
+   ratings estimados — edítalos si el clasificado real fue otro.
+   ═══════════════════════════════════════════════════════════════ */
 const TEAMS = {
-  "Argentina":  {elo:1900,atk:2.2,def:1.0},
-  "Brasil":     {elo:1890,atk:2.3,def:1.0},
-  "Francia":    {elo:1885,atk:2.1,def:0.9},
-  "Inglaterra": {elo:1870,atk:1.9,def:0.8},
-  "España":     {elo:1860,atk:2.0,def:0.9},
-  "Alemania":   {elo:1850,atk:2.1,def:1.0},
-  "Portugal":   {elo:1840,atk:1.8,def:0.8},
-  "P. Bajos":   {elo:1830,atk:1.9,def:0.9},
-  "Belgica":    {elo:1820,atk:1.8,def:0.9},
-  "Italia":     {elo:1800,atk:1.7,def:0.8},
-  "Croacia":    {elo:1780,atk:1.6,def:1.0},
-  "Uruguay":    {elo:1800,atk:1.7,def:1.1},
-  "Colombia":   {elo:1780,atk:1.6,def:1.2},
-  "Mexico":     {elo:1750,atk:1.4,def:1.3},
-  "EE.UU.":     {elo:1710,atk:1.3,def:1.2},
-  "Japon":      {elo:1760,atk:1.5,def:1.0},
-  "Marruecos":  {elo:1720,atk:1.2,def:1.4},
-  "Senegal":    {elo:1740,atk:1.4,def:1.2},
-  "Canada":     {elo:1680,atk:1.0,def:1.5},
-  "Ecuador":    {elo:1700,atk:1.2,def:1.3},
-  "Peru":       {elo:1690,atk:1.2,def:1.3},
-  "Chile":      {elo:1710,atk:1.3,def:1.2},
-  "Australia":  {elo:1680,atk:1.1,def:1.3},
-  "Corea":      {elo:1720,atk:1.3,def:1.2},
-  "Ghana":      {elo:1690,atk:1.2,def:1.3},
-  "Nigeria":    {elo:1710,atk:1.4,def:1.3},
+  /* CONMEBOL */
+  "Argentina":      {f:"🇦🇷", c:"CONMEBOL", elo:1950, atk:2.20, def:0.75},
+  "Brasil":         {f:"🇧🇷", c:"CONMEBOL", elo:1900, atk:2.10, def:0.85},
+  "Uruguay":        {f:"🇺🇾", c:"CONMEBOL", elo:1830, atk:1.70, def:0.90},
+  "Colombia":       {f:"🇨🇴", c:"CONMEBOL", elo:1820, atk:1.70, def:0.95},
+  "Ecuador":        {f:"🇪🇨", c:"CONMEBOL", elo:1800, atk:1.50, def:0.85},
+  "Paraguay":       {f:"🇵🇾", c:"CONMEBOL", elo:1760, atk:1.30, def:0.95},
+  /* UEFA */
+  "España":         {f:"🇪🇸", c:"UEFA", elo:1940, atk:2.30, def:0.80},
+  "Francia":        {f:"🇫🇷", c:"UEFA", elo:1930, atk:2.20, def:0.80},
+  "Inglaterra":     {f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", c:"UEFA", elo:1900, atk:2.00, def:0.75},
+  "Portugal":       {f:"🇵🇹", c:"UEFA", elo:1880, atk:2.00, def:0.85},
+  "Países Bajos":   {f:"🇳🇱", c:"UEFA", elo:1860, atk:1.90, def:0.85},
+  "Alemania":       {f:"🇩🇪", c:"UEFA", elo:1850, atk:2.00, def:0.95},
+  "Bélgica":        {f:"🇧🇪", c:"UEFA", elo:1820, atk:1.80, def:1.00},
+  "Croacia":        {f:"🇭🇷", c:"UEFA", elo:1800, atk:1.60, def:0.95},
+  "Noruega":        {f:"🇳🇴", c:"UEFA", elo:1810, atk:2.00, def:1.00},
+  "Suiza":          {f:"🇨🇭", c:"UEFA", elo:1790, atk:1.60, def:0.90},
+  "Austria":        {f:"🇦🇹", c:"UEFA", elo:1780, atk:1.60, def:1.00},
+  "Escocia":        {f:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", c:"UEFA", elo:1720, atk:1.30, def:1.10},
+  "Italia":         {f:"🇮🇹", c:"UEFA", elo:1840, atk:1.70, def:0.85, po:true},
+  "Dinamarca":      {f:"🇩🇰", c:"UEFA", elo:1780, atk:1.60, def:0.95, po:true},
+  "Polonia":        {f:"🇵🇱", c:"UEFA", elo:1740, atk:1.40, def:1.05, po:true},
+  "Turquía":        {f:"🇹🇷", c:"UEFA", elo:1760, atk:1.60, def:1.10, po:true},
+  /* CONCACAF (anfitriones + clasificados) */
+  "México":         {f:"🇲🇽", c:"CONCACAF", elo:1760, atk:1.50, def:1.05, host:true},
+  "Estados Unidos": {f:"🇺🇸", c:"CONCACAF", elo:1750, atk:1.50, def:1.00, host:true},
+  "Canadá":         {f:"🇨🇦", c:"CONCACAF", elo:1730, atk:1.40, def:1.00, host:true},
+  "Panamá":         {f:"🇵🇦", c:"CONCACAF", elo:1700, atk:1.20, def:1.10},
+  "Curazao":        {f:"🇨🇼", c:"CONCACAF", elo:1600, atk:0.90, def:1.25},
+  "Haití":          {f:"🇭🇹", c:"CONCACAF", elo:1580, atk:0.90, def:1.30},
+  /* AFC */
+  "Japón":          {f:"🇯🇵", c:"AFC", elo:1790, atk:1.70, def:0.95},
+  "Irán":           {f:"🇮🇷", c:"AFC", elo:1760, atk:1.40, def:1.00},
+  "Corea del Sur":  {f:"🇰🇷", c:"AFC", elo:1750, atk:1.50, def:1.05},
+  "Australia":      {f:"🇦🇺", c:"AFC", elo:1720, atk:1.30, def:1.05},
+  "Uzbekistán":     {f:"🇺🇿", c:"AFC", elo:1660, atk:1.10, def:1.15},
+  "Arabia Saudita": {f:"🇸🇦", c:"AFC", elo:1680, atk:1.10, def:1.15},
+  "Catar":          {f:"🇶🇦", c:"AFC", elo:1640, atk:1.00, def:1.20},
+  "Jordania":       {f:"🇯🇴", c:"AFC", elo:1630, atk:1.00, def:1.20},
+  "Irak":           {f:"🇮🇶", c:"AFC", elo:1620, atk:0.90, def:1.25, po:true},
+  /* CAF */
+  "Marruecos":      {f:"🇲🇦", c:"CAF", elo:1800, atk:1.60, def:0.85},
+  "Senegal":        {f:"🇸🇳", c:"CAF", elo:1770, atk:1.50, def:0.95},
+  "Egipto":         {f:"🇪🇬", c:"CAF", elo:1740, atk:1.30, def:1.00},
+  "Argelia":        {f:"🇩🇿", c:"CAF", elo:1740, atk:1.40, def:1.05},
+  "Costa de Marfil":{f:"🇨🇮", c:"CAF", elo:1730, atk:1.40, def:1.05},
+  "Túnez":          {f:"🇹🇳", c:"CAF", elo:1700, atk:1.10, def:1.05},
+  "Ghana":          {f:"🇬🇭", c:"CAF", elo:1690, atk:1.30, def:1.15},
+  "Sudáfrica":      {f:"🇿🇦", c:"CAF", elo:1670, atk:1.20, def:1.15},
+  "Cabo Verde":     {f:"🇨🇻", c:"CAF", elo:1640, atk:1.00, def:1.20},
+  "RD Congo":       {f:"🇨🇩", c:"CAF", elo:1640, atk:1.10, def:1.20, po:true},
+  /* OFC */
+  "Nueva Zelanda":  {f:"🇳🇿", c:"OFC", elo:1620, atk:1.00, def:1.25},
 };
 
-const MEDIA = 1.4, F_ELO = 0.004, V_LOCAL = 100, RHO = -0.10, MAX_G = 9;
+/* Parámetros del modelo (idénticos al agente MCP donde aplica) */
+const MEDIA = 1.35;        // goles esperados por equipo en partido parejo de Mundial
+const F_ELO = 0.004;       // sensibilidad Elo → fuerza
+const ELO_HOST = 100;      // bonus Elo del anfitrión (solo USA/MEX/CAN en su sede)
+const LAMBDA_HOST = 1.18;  // multiplicador ofensivo del anfitrión
+const RHO = -0.10;         // correlación Dixon-Coles
+const MAX_G = 11;          // marcadores 0..10
+const KELLY_FRAC = 0.25;   // ¼ Kelly
+const W_CONS = {m1:0.30, m2:0.30, m4:0.40}; // pesos del consenso
 
-// ══════════════════════════════════════════════════════════
-// MATH
-// ══════════════════════════════════════════════════════════
-function pPMF(k, lam) {
-  if (lam <= 0) return k === 0 ? 1 : 0;
+/* ═══════════ NÚCLEO MATEMÁTICO ═══════════ */
+
+function pmf(k, lam){
+  if (!(lam > 0)) return k === 0 ? 1 : 0;
   let lp = -lam + k * Math.log(lam);
   for (let i = 2; i <= k; i++) lp -= Math.log(i);
   return Math.exp(lp);
 }
-function pProbs(lam, mu) {
+
+function tau(x, y, lam, mu){
+  let t = 1;
+  if (x===0 && y===0) t = 1 - lam*mu*RHO;
+  else if (x===1 && y===0) t = 1 + mu*RHO;
+  else if (x===0 && y===1) t = 1 + lam*RHO;
+  else if (x===1 && y===1) t = 1 - RHO;
+  return Math.max(t, 1e-10);
+}
+
+/* Poisson independiente → {hw,d,aw} */
+function poissonOutcome(lam, mu){
   let hw=0, d=0, aw=0;
-  for (let h=0; h<MAX_G; h++) {
-    const ph = pPMF(h, lam);
-    for (let a=0; a<MAX_G; a++) {
-      const p = ph * pPMF(a, mu);
+  for (let h=0; h<MAX_G; h++){
+    const ph = pmf(h, lam);
+    for (let a=0; a<MAX_G; a++){
+      const p = ph * pmf(a, mu);
       if (h>a) hw+=p; else if (h===a) d+=p; else aw+=p;
     }
   }
   const t = hw+d+aw;
   return {hw:hw/t, d:d/t, aw:aw/t, lam, mu};
 }
-function tau(x, y, lam, mu) {
-  if (x===0&&y===0) return 1-lam*mu*RHO;
-  if (x===1&&y===0) return 1+mu*RHO;
-  if (x===0&&y===1) return 1+lam*RHO;
-  if (x===1&&y===1) return 1-RHO;
-  return 1;
-}
-function dcCalc(lam, mu) {
-  const mat={};
+
+/* Dixon-Coles → {hw,d,aw,mat} con matriz normalizada */
+function dixonColes(lam, mu){
+  const mat = {};
   let hw=0, d=0, aw=0, tot=0;
-  for (let h=0; h<MAX_G; h++) {
-    const ph = pPMF(h, lam);
-    for (let a=0; a<MAX_G; a++) {
-      const p = ph * pPMF(a, mu) * tau(h, a, lam, mu);
-      mat[`${h}-${a}`]=p; tot+=p;
+  for (let h=0; h<MAX_G; h++){
+    const ph = pmf(h, lam);
+    for (let a=0; a<MAX_G; a++){
+      const p = ph * pmf(a, mu) * tau(h, a, lam, mu);
+      mat[h+"-"+a] = p; tot += p;
       if (h>a) hw+=p; else if (h===a) d+=p; else aw+=p;
     }
   }
-  const nm={};
-  for (const k in mat) nm[k]=mat[k]/tot;
-  return {hw:hw/tot, d:d/tot, aw:aw/tot, mat:nm, lam, mu};
+  for (const k in mat) mat[k] /= tot;
+  return {hw:hw/tot, d:d/tot, aw:aw/tot, lam, mu, mat};
 }
-function predict(hk, ak, ol, oe, ov) {
-  const h=TEAMS[hk], a=TEAMS[ak];
-  // M1: Elo-Poisson
-  const eAdj=h.elo+V_LOCAL;
-  const l1=MEDIA*Math.exp(F_ELO*(eAdj-a.elo)/2);
-  const m1=MEDIA*Math.exp(F_ELO*(a.elo-eAdj)/2);
-  const M1=pProbs(l1, m1);
-  // M2: Ataque/Defensa
-  const l2=MEDIA*h.atk*a.def, m2=MEDIA*a.atk*h.def;
-  const M2=pProbs(l2, m2);
-  // M4: Dixon-Coles
-  const M4=dcCalc(l2, m2);
-  // M5: Consenso
-  const W=[.30,.35,.35];
-  const cHw=W[0]*M1.hw+W[1]*M2.hw+W[2]*M4.hw;
-  const cD =W[0]*M1.d +W[1]*M2.d +W[2]*M4.d;
-  const cAw=W[0]*M1.aw+W[1]*M2.aw+W[2]*M4.aw;
-  const vals=[M1.hw,M2.hw,M4.hw];
-  const mean=vals.reduce((s,v)=>s+v,0)/3;
-  const div=Math.sqrt(vals.reduce((s,v)=>s+(v-mean)**2,0)/3);
 
-  const models=[
-    {name:"Elo-Poisson (M1)", ...M1},
-    {name:"Ataque/Defensa (M2)", ...M2},
-    {name:"Dixon-Coles ρ=-0.10 (M4)", ...M4},
-    {name:"Consenso ponderado (M5)", hw:cHw, d:cD, aw:cAw, lam:M4.lam, mu:M4.mu},
-  ];
-  // M3: Cuotas implicitas
-  if (ol>1 && oe>1 && ov>1) {
-    const inv=1/ol+1/oe+1/ov;
-    models.splice(3,0,{name:"Cuotas implicitas (M3)",
-      hw:1/ol/inv, d:1/oe/inv, aw:1/ov/inv, lam:null, mu:null});
+/* Mercados derivados de la matriz DC */
+function derivedMarkets(mat){
+  let over25=0, btts=0, over15=0, under25=0;
+  for (const k in mat){
+    const [h,a] = k.split("-").map(Number);
+    const p = mat[k];
+    if (h+a >= 3) over25 += p; else under25 += p;
+    if (h+a >= 2) over15 += p;
+    if (h>0 && a>0) btts += p;
   }
-  return {models, dcMat:M4.mat, cons:{hw:cHw,d:cD,aw:cAw,div}};
+  return {over25, under25, over15, btts};
 }
 
-// ══════════════════════════════════════════════════════════
-// UI — TAB NAVIGATION
-// ══════════════════════════════════════════════════════════
-function showTab(name) {
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
-  if (name==='stats') renderStats();
+/* Predicción completa de un partido */
+function predict(nA, nB, fase, sede, odds){
+  const A = TEAMS[nA], B = TEAMS[nB];
+
+  // Ventaja de sede: solo el anfitrión en su país (o nunca, si "neutral")
+  const hostA = sede === "auto" && !!A.host;
+  const hostB = sede === "auto" && !!B.host && !hostA; // si ambos, A juega "en casa" por orden
+  const eloA = A.elo + (hostA ? ELO_HOST : 0);
+  const eloB = B.elo + (hostB ? ELO_HOST : 0);
+
+  // M1 — Elo-Poisson (fórmula del agente MCP)
+  const l1 = MEDIA * Math.exp(F_ELO * (eloA - eloB) / 2);
+  const m1v = MEDIA * Math.exp(F_ELO * (eloB - eloA) / 2);
+  const M1 = poissonOutcome(l1, m1v);
+
+  // M2 — Ataque/Defensa (fórmula del agente MCP) + boost de anfitrión
+  let l2 = MEDIA * A.atk * B.def * (hostA ? LAMBDA_HOST : 1);
+  let m2v = MEDIA * B.atk * A.def * (hostB ? LAMBDA_HOST : 1);
+  const M2 = poissonOutcome(l2, m2v);
+
+  // M4 — Dixon-Coles sobre lambdas combinadas (media geométrica de M1 y M2:
+  // funde la señal Elo con la señal ataque/defensa antes de corregir τ)
+  const lamB = Math.sqrt(l1 * l2), muB = Math.sqrt(m1v * m2v);
+  const M4 = dixonColes(lamB, muB);
+
+  // M3 — Cuotas implícitas sin margen (si hay cuotas)
+  let M3 = null;
+  if (odds && odds.h > 1 && odds.d > 1 && odds.a > 1){
+    const inv = 1/odds.h + 1/odds.d + 1/odds.a;
+    M3 = {hw:(1/odds.h)/inv, d:(1/odds.d)/inv, aw:(1/odds.a)/inv, lam:null, mu:null};
+  }
+
+  // M5 — Consenso ponderado (modelos propios; las cuotas no votan)
+  const hw = W_CONS.m1*M1.hw + W_CONS.m2*M2.hw + W_CONS.m4*M4.hw;
+  const d  = W_CONS.m1*M1.d  + W_CONS.m2*M2.d  + W_CONS.m4*M4.d;
+  const aw = W_CONS.m1*M1.aw + W_CONS.m2*M2.aw + W_CONS.m4*M4.aw;
+  const vals = [M1.hw, M2.hw, M4.hw];
+  const mean = (vals[0]+vals[1]+vals[2])/3;
+  const div = Math.sqrt(vals.reduce((s,v)=>s+(v-mean)**2,0)/3);
+
+  // Eliminatoria: el empate va a prórroga/penales.
+  // P(avanza A) = hw + d · w, donde w mezcla 50/50 (lotería de penales)
+  // con la fuerza relativa en 90' → w = 0.25 + 0.5·hw/(hw+aw)
+  let advA=null, advB=null;
+  if (fase === "ko"){
+    const r = hw / (hw + aw);
+    const w = 0.25 + 0.5*r;
+    advA = hw + d*w;
+    advB = 1 - advA;
+  }
+
+  return {M1, M2, M3, M4, cons:{hw,d,aw,div}, advA, advB, hostA, hostB,
+          markets: derivedMarkets(M4.mat)};
 }
 
-// ══════════════════════════════════════════════════════════
-// UI — POPULATE SELECTS
-// ══════════════════════════════════════════════════════════
-const teamNames = Object.keys(TEAMS);
-const sel1=document.getElementById('homeTeam');
-const sel2=document.getElementById('awayTeam');
-teamNames.forEach((t,i)=>{
-  sel1.appendChild(new Option(t,t));
-  const o2=new Option(t,t);
-  if(i===1) o2.selected=true;
-  sel2.appendChild(o2);
-});
+/* Kelly fraccional — misma fórmula del agente MCP */
+function kelly(p, cuota){
+  if (!(cuota > 1) || !(p > 0) || !(p < 1)) return {k:0, edge:-1, fair:Infinity};
+  const b = cuota - 1, q = 1 - p;
+  const k = (b*p - q)/b;
+  return {k: Math.max(0,k), edge: p*cuota - 1, fair: 1/p};
+}
 
-// ══════════════════════════════════════════════════════════
-// UI — PREDICTION RENDERING
-// ══════════════════════════════════════════════════════════
-let lastCons = null;
+/* ═══════════ ESTADO PERSISTENTE ═══════════ */
+const STORE_KEY = "mundial2026_v2";
 
-function runPrediction() {
-  const hk=sel1.value, ak=sel2.value;
-  if (hk===ak) { alert('Selecciona equipos diferentes'); return; }
-  const ol=parseFloat(document.getElementById('ol').value);
-  const oe=parseFloat(document.getElementById('oe').value);
-  const ov=parseFloat(document.getElementById('ov').value);
-  const res = predict(hk, ak, ol, oe, ov);
-  lastCons = res.cons;
-
-  // Consensus
-  const {hw,d,aw,div} = res.cons;
-  const wins=[{v:hw,l:`Local (${hk})`},{v:d,l:'Empate'},{v:aw,l:`Visit. (${ak})`}];
-  const best=wins.reduce((a,b)=>b.v>a.v?b:a);
-  const cc=document.getElementById('consensusCard');
-  cc.innerHTML=`<div class="consensus-title">CONSENSO — 3 modelos</div>
-  <div class="cons-grid">
-    ${wins.map(w=>`<div class="cons-item${w===best?' cons-winner':''}">
-      <div class="big">${(w.v*100).toFixed(1)}%</div>
-      <div class="lbl">${w.l}</div>
-    </div>`).join('')}
-  </div>
-  <div style="text-align:center;margin-top:6px;">
-    <span class="div-badge ${div<0.04?'div-low':'div-high'}">
-      ${div<0.04?'Modelos alineados — confianza alta':'Modelos divergen — mayor incertidumbre'}
-      (div: ${div.toFixed(3)})
-    </span>
-  </div>`;
-
-  // Models list
-  const ml=document.getElementById('modelsList');
-  ml.innerHTML='';
-  res.models.forEach(m=>{
-    const div2=document.createElement('div');
-    div2.className='model-item';
-    const lamLine = m.lam!=null
-      ? `<div class="model-footer">lambda: ${m.lam.toFixed(2)} — ${m.mu.toFixed(2)}</div>`
-      : '';
-    div2.innerHTML=`
-      <div class="model-name">${m.name}</div>
-      <div class="prob-row"><span class="prob-label">Local</span><span class="prob-val" style="color:var(--blue)">${p(m.hw)}</span></div>
-      <div class="bar-bg"><div class="bar-fill bar-hw" style="width:${m.hw*100}%"></div></div>
-      <div class="prob-row"><span class="prob-label">Empate</span><span class="prob-val" style="color:var(--yellow)">${p(m.d)}</span></div>
-      <div class="bar-bg"><div class="bar-fill bar-d" style="width:${m.d*100}%"></div></div>
-      <div class="prob-row"><span class="prob-label">Visitante</span><span class="prob-val" style="color:var(--red)">${p(m.aw)}</span></div>
-      <div class="bar-bg"><div class="bar-fill bar-aw" style="width:${m.aw*100}%"></div></div>
-      ${lamLine}`;
-    ml.appendChild(div2);
-  });
-
-  // Top 5 scores
-  const top5=Object.entries(res.dcMat).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const sl=document.getElementById('scoreList');
-  sl.innerHTML=top5.map(([sc,prob])=>{
-    const [gl,ga]=sc.split('-').map(Number);
-    const tipo=gl>ga?'local':gl===ga?'empate':'visitante';
-    const tipoClass=`tipo-${tipo}`;
-    const tipoLabel=tipo==='local'?hk:tipo==='visitante'?ak:'Empate';
-    return `<div class="score-row">
-      <span class="score-tag">${hk} ${gl} — ${ga} ${ak}</span>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span class="score-pct">${(prob*100).toFixed(2)}%</span>
-        <span class="score-tipo ${tipoClass}">${tipoLabel}</span>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Score matrix (5x5)
-  const mat=document.getElementById('scoreMatrix');
-  mat.innerHTML='';
-  const SHOW=5;
-  const maxP=Math.max(...Object.values(res.dcMat));
-  // header
-  const thead=document.createElement('tr');
-  const corner=document.createElement('th');
-  corner.className='corner';corner.textContent='L\\ V';
-  thead.appendChild(corner);
-  for(let a=0;a<SHOW;a++){const th=document.createElement('th');th.textContent=a;thead.appendChild(th);}
-  mat.appendChild(thead);
-  for(let h=0;h<SHOW;h++){
-    const tr=document.createElement('tr');
-    const th=document.createElement('th');th.textContent=h;tr.appendChild(th);
-    for(let a=0;a<SHOW;a++){
-      const prob=res.dcMat[`${h}-${a}`]||0;
-      const intensity=prob/maxP;
-      const td=document.createElement('td');
-      const r=Math.round(0+intensity*0);
-      const g=Math.round(80+intensity*132);
-      const b=Math.round(40+intensity*66);
-      td.style.background=`rgba(0,${Math.round(intensity*212)},${Math.round(intensity*106)},${0.1+intensity*0.7})`;
-      td.style.color=intensity>0.5?'#000':'var(--text)';
-      td.style.fontWeight=intensity>0.6?'700':'400';
-      td.textContent=`${(prob*100).toFixed(1)}`;
-      tr.appendChild(td);
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw){
+      const s = JSON.parse(raw);
+      if (typeof s.bankroll === "number" && Array.isArray(s.historial)) return s;
     }
-    mat.appendChild(tr);
+  }catch(e){ /* storage bloqueado o corrupto → estado fresco */ }
+  return {bankroll:1000, historial:[]};
+}
+function saveState(s){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(s)); }
+  catch(e){ alert("No se pudo guardar (almacenamiento no disponible)."); }
+}
+
+/* ═══════════ UI — NAVEGACIÓN Y TOGGLES ═══════════ */
+let fase = "grupo", sede = "auto";
+
+function showTab(n){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".nbtn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+n).classList.add("active");
+  document.getElementById("nb-"+n).classList.add("active");
+  if (n==="stats") renderStats();
+  if (n==="apuesta") drawChart();
+}
+function setFase(f){
+  fase = f;
+  document.getElementById("tgGrupo").classList.toggle("on", f==="grupo");
+  document.getElementById("tgKO").classList.toggle("on", f==="ko");
+}
+function setSede(s){
+  sede = s;
+  document.getElementById("tgAuto").classList.toggle("on", s==="auto");
+  document.getElementById("tgNeu").classList.toggle("on", s==="neutral");
+  updateSedeHint();
+}
+function updateSedeHint(){
+  const h = document.getElementById("sedeHint");
+  if (sede==="neutral"){ h.textContent = "Sede neutral: ningún equipo recibe ventaja."; return; }
+  const a = TEAMS[selH.value], b = TEAMS[selA.value];
+  if (a && a.host) h.textContent = selH.value + " recibe ventaja de anfitrión (+" + ELO_HOST + " Elo).";
+  else if (b && b.host) h.textContent = selA.value + " recibe ventaja de anfitrión (+" + ELO_HOST + " Elo).";
+  else h.textContent = "Ninguno es anfitrión: el partido se calcula como sede neutral.";
+}
+
+/* ═══════════ UI — SELECTS ═══════════ */
+const selH = document.getElementById("tH"), selA = document.getElementById("tA");
+(function fillSelects(){
+  const byConf = {};
+  for (const [name, t] of Object.entries(TEAMS)){
+    (byConf[t.c] = byConf[t.c] || []).push(name);
   }
+  for (const sel of [selH, selA]){
+    for (const conf of ["CONMEBOL","UEFA","CONCACAF","AFC","CAF","OFC"]){
+      const og = document.createElement("optgroup");
+      og.label = conf;
+      for (const name of byConf[conf]){
+        const o = new Option(TEAMS[name].f + " " + name, name);
+        og.appendChild(o);
+      }
+      sel.appendChild(og);
+    }
+  }
+  selH.value = "México";
+  selA.value = "Argentina";
+  selH.addEventListener("change", updateSedeHint);
+  selA.addEventListener("change", updateSedeHint);
+})();
 
-  document.getElementById('results').style.display='block';
+/* ═══════════ UI — PREDICCIÓN ═══════════ */
+const fmt = v => (v*100).toFixed(1)+"%";
 
-  // Auto-fill Kelly tab with consensus home win prob
-  document.getElementById('kP').value=(hw*100).toFixed(1);
-  if(ol>1) document.getElementById('kOdds').value=ol;
+function readOdds(){
+  const h = parseFloat(document.getElementById("oH").value);
+  const d = parseFloat(document.getElementById("oD").value);
+  const a = parseFloat(document.getElementById("oA").value);
+  return (h>1 && d>1 && a>1) ? {h,d,a} : null;
+}
+
+function runPrediction(){
+  const nA = selH.value, nB = selA.value;
+  if (nA === nB){ alert("Selecciona dos equipos diferentes."); return; }
+  const odds = readOdds();
+  const R = predict(nA, nB, fase, sede, odds);
+
+  renderConsensus(nA, nB, R);
+  renderValue(nA, nB, R, odds);
+  renderMarkets(R.markets);
+  renderScores(nA, nB, R.M4.mat);
+  renderMatrix(R.M4.mat);
+  renderModels(nA, nB, R);
+
+  document.getElementById("results").style.display = "block";
+
+  // Pre-cargar Kelly y formulario con el consenso
+  document.getElementById("kP").value = (R.cons.hw*100).toFixed(1);
+  if (odds) document.getElementById("kO").value = odds.h;
   calcKelly();
-
-  // Auto-fill partido name in register form
-  document.getElementById('regPartido').value=`${hk} vs ${ak}`;
+  document.getElementById("rP").value = nA + " vs " + nB;
 }
 
-function p(v){ return (v*100).toFixed(1)+'%'; }
-
-// ══════════════════════════════════════════════════════════
-// KELLY CALCULATOR
-// ══════════════════════════════════════════════════════════
-function calcKelly() {
-  const prob=parseFloat(document.getElementById('kP').value)/100;
-  const odds=parseFloat(document.getElementById('kOdds').value);
-  const el=document.getElementById('kellyOut');
-  const state=loadState();
-  if(isNaN(prob)||isNaN(odds)||prob<=0||prob>=1||odds<=1){
-    el.className='kelly-result kelly-neu';
-    el.textContent='Ingresa probabilidad (1-99%) y cuota > 1.0';
-    return;
+function renderConsensus(nA, nB, R){
+  const {hw,d,aw,div} = R.cons;
+  const items = [
+    {v:hw, l:TEAMS[nA].f+" "+nA},
+    {v:d,  l:"Empate"},
+    {v:aw, l:TEAMS[nB].f+" "+nB},
+  ];
+  const best = Math.max(hw,d,aw);
+  let html = '<div class="ct">Consenso — 3 modelos ('+(fase==="ko"?"eliminatoria":"fase de grupos")+')</div><div class="cgrid">';
+  for (const it of items){
+    html += '<div class="ci'+(it.v===best?" cw":"")+'"><div class="big">'+fmt(it.v)+'</div><div class="lbl">'+it.l+'</div></div>';
   }
-  const b=odds-1, q=1-prob;
-  const kelly=(b*prob-q)/b;
-  const fair=1/prob;
-  const edge=(prob*odds-1)*100;
-  const quarter=kelly/4;
-  const bk=state.bankroll;
-
-  if(kelly<=0){
-    el.className='kelly-result kelly-neg';
-    el.innerHTML=`Sin valor — cuota justa: <b>${fair.toFixed(2)}</b>, mercado: <b>${odds}</b><br>
-    Edge: <b>${edge.toFixed(1)}%</b> — no apostar.`;
-  } else {
-    const bet=Math.max(0,quarter*bk);
-    el.className='kelly-result kelly-pos';
-    el.innerHTML=`Hay valor — cuota justa: <b>${fair.toFixed(2)}</b>, mercado: <b>${odds}</b><br>
-    Edge: <b>+${edge.toFixed(1)}%</b><br>
-    Kelly completo: <b>${(kelly*100).toFixed(1)}%</b> · 1/4 Kelly: <b>${(quarter*100).toFixed(1)}%</b><br>
-    Apuesta sugerida: <b>$${bet.toFixed(2)}</b> de $${bk.toFixed(2)}`;
+  html += '</div>';
+  if (fase === "ko"){
+    html += '<div class="adv">'
+      + '<div class="advbox"><div class="v">'+fmt(R.advA)+'</div><div class="l">Avanza '+nA+' (con prórroga/penales)</div></div>'
+      + '<div class="advbox"><div class="v">'+fmt(R.advB)+'</div><div class="l">Avanza '+nB+'</div></div></div>';
   }
+  const low = R.cons.div < 0.04;
+  html += '<div class="divb"><span class="'+(low?"dlow":"dhigh")+'">'
+    + (low ? "Modelos alineados — confianza alta" : "Modelos divergen — reduce el tamaño de apuesta")
+    + ' (σ='+div.toFixed(3)+')</span></div>';
+  document.getElementById("consCard").innerHTML = html;
 }
 
-// ══════════════════════════════════════════════════════════
-// BANKROLL — localStorage
-// ══════════════════════════════════════════════════════════
-function loadState() {
-  try {
-    const s=localStorage.getItem('mundial_bk');
-    return s ? JSON.parse(s) : {bankroll:1000, historial:[]};
-  } catch(e) { return {bankroll:1000, historial:[]}; }
-}
-function saveState(s) {
-  localStorage.setItem('mundial_bk', JSON.stringify(s));
-}
-function updateBadge() {
-  const s=loadState();
-  document.getElementById('bankrollBadge').textContent=`$${s.bankroll.toFixed(2)}`;
-  document.getElementById('bkAmount').textContent=`$${s.bankroll.toLocaleString('es',{minimumFractionDigits:2})}`;
-  const diff=s.bankroll-1000;
-  const pct=diff/10;
-  const plEl=document.getElementById('bkPL');
-  plEl.style.color=diff>=0?'var(--green)':'var(--red)';
-  plEl.textContent=`P/L: ${diff>=0?'+':''}$${diff.toFixed(2)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`;
-}
-function registerBet() {
-  const partido=document.getElementById('regPartido').value.trim();
-  const tipo=document.getElementById('regTipo').value;
-  const resultado=document.getElementById('regResult').value;
-  const monto=parseFloat(document.getElementById('regMonto').value);
-  const cuota=parseFloat(document.getElementById('regCuota').value);
-  if(!partido||isNaN(monto)||isNaN(cuota)||monto<=0||cuota<=1){
-    alert('Completa todos los campos correctamente.');
-    return;
-  }
-  const estado=loadState();
-  if(monto>estado.bankroll){
-    alert(`No tienes suficiente bankroll ($${estado.bankroll.toFixed(2)})`);
-    return;
-  }
-  const ganado=resultado===tipo;
-  const beneficio=ganado ? monto*(cuota-1) : -monto;
-  const nuevoBank=estado.bankroll+beneficio;
-  estado.bankroll=Math.max(0,nuevoBank);
-  estado.historial.push({
-    partido, tipo, resultado, monto, cuota,
-    beneficio:+beneficio.toFixed(2),
-    bankroll:+estado.bankroll.toFixed(2),
-    ts: new Date().toLocaleDateString('es')
+function renderValue(nA, nB, R, odds){
+  const card = document.getElementById("valueCard");
+  if (!odds){ card.style.display = "none"; return; }
+  card.style.display = "block";
+  const bk = loadState().bankroll;
+  const rows = [
+    {l:"Gana A", name:nA, p:R.cons.hw, o:odds.h},
+    {l:"Empate", name:"X", p:R.cons.d,  o:odds.d},
+    {l:"Gana B", name:nB, p:R.cons.aw, o:odds.a},
+  ];
+  let bestIdx = -1, bestEdge = 0;
+  rows.forEach((r,i)=>{
+    r.kelly = kelly(r.p, r.o);
+    if (r.kelly.edge > bestEdge){ bestEdge = r.kelly.edge; bestIdx = i; }
   });
-  saveState(estado);
-  updateBadge();
-  document.getElementById('regMonto').value='';
-  document.getElementById('regCuota').value='';
-  const txt=ganado
-    ? `Ganaste $${beneficio.toFixed(2)}! Bankroll: $${estado.bankroll.toFixed(2)}`
-    : `Perdiste $${Math.abs(beneficio).toFixed(2)}. Bankroll: $${estado.bankroll.toFixed(2)}`;
-  alert(txt);
-}
-function resetBankroll() {
-  if(!confirm('Reiniciar bankroll a $1000? Se mantiene el historial.')) return;
-  const s=loadState(); s.bankroll=1000; saveState(s); updateBadge();
+  let html = "";
+  rows.forEach((r,i)=>{
+    const pos = r.kelly.edge > 0;
+    const stake = pos ? (r.kelly.k * KELLY_FRAC * bk) : 0;
+    html += '<div class="vrow'+(i===bestIdx && pos ? " best":"")+'">'
+      + '<span class="o">'+r.l+'</span>'
+      + '<span class="det">P='+fmt(r.p)+' · justa '+r.kelly.fair.toFixed(2)+' · mercado '+r.o.toFixed(2)+'</span>'
+      + '<span class="edge '+(pos?"ep":"en")+'">'+(pos?"+":"")+(r.kelly.edge*100).toFixed(1)+'%</span>'
+      + '<span class="stake">'+(pos ? "$"+stake.toFixed(2) : "—")+'</span>'
+      + '</div>';
+  });
+  html += '<p class="hint" style="margin:8px 0 0">Monto sugerido = ¼ Kelly sobre tu bankroll actual ($'+bk.toFixed(2)+'). Sin fila verde → no hay valor, no apuestes.</p>';
+  document.getElementById("valueList").innerHTML = html;
 }
 
-// ══════════════════════════════════════════════════════════
-// STATS
-// ══════════════════════════════════════════════════════════
-function renderStats() {
-  const s=loadState();
-  const h=s.historial;
-  if(!h.length){
-    document.getElementById('histList').innerHTML=
-      '<div class="empty-state">Sin apuestas registradas aun</div>';
+function renderMarkets(m){
+  const g = document.getElementById("mktGrid");
+  g.innerHTML =
+    mkt(fmt(m.over25), "Más de 2.5 goles", m.over25>=.5?"green":"red")
+  + mkt(fmt(m.under25), "Menos de 2.5 goles", m.under25>=.5?"green":"red")
+  + mkt(fmt(m.btts), "Ambos anotan (BTTS)", m.btts>=.5?"green":"red")
+  + mkt(fmt(m.over15), "Más de 1.5 goles", m.over15>=.5?"green":"red");
+  function mkt(v,l,c){ return '<div class="mkt"><div class="v '+c+'">'+v+'</div><div class="l">'+l+'</div></div>'; }
+}
+
+function renderScores(nA, nB, mat){
+  const top = Object.entries(mat).sort((x,y)=>y[1]-x[1]).slice(0,5);
+  document.getElementById("scoreList").innerHTML = top.map(([sc,p])=>{
+    const [h,a] = sc.split("-").map(Number);
+    const tipo = h>a ? ["tL", nA] : h===a ? ["tE","Empate"] : ["tV", nB];
+    return '<div class="srow"><span class="stag">'+nA+' '+h+' — '+a+' '+nB+'</span>'
+      + '<div style="display:flex;align-items:center;gap:6px">'
+      + '<span class="spct">'+(p*100).toFixed(2)+'%</span>'
+      + '<span class="stipo '+tipo[0]+'">'+tipo[1]+'</span></div></div>';
+  }).join("");
+}
+
+function renderMatrix(mat){
+  const SHOW = 5;
+  const tbl = document.getElementById("smat");
+  tbl.innerHTML = "";
+  const maxP = Math.max(...Object.values(mat));
+  let tr = document.createElement("tr");
+  tr.innerHTML = '<th>A\\B</th>' + Array.from({length:SHOW},(_,a)=>'<th>'+a+'</th>').join("");
+  tbl.appendChild(tr);
+  for (let h=0; h<SHOW; h++){
+    tr = document.createElement("tr");
+    let cells = '<th>'+h+'</th>';
+    for (let a=0; a<SHOW; a++){
+      const p = mat[h+"-"+a] || 0;
+      const t = p/maxP;
+      cells += '<td style="background:rgba(0,'+Math.round(t*212)+','+Math.round(t*106)+','
+        + (0.08+t*0.75).toFixed(2)+');color:'+(t>0.55?"#000":"var(--text)")
+        + ';font-weight:'+(t>0.6?700:400)+'">'+(p*100).toFixed(1)+'</td>';
+    }
+    tr.innerHTML = cells;
+    tbl.appendChild(tr);
+  }
+}
+
+function renderModels(nA, nB, R){
+  const list = [
+    {n:"M1 · Elo-Poisson", m:R.M1},
+    {n:"M2 · Ataque/Defensa", m:R.M2},
+    {n:"M4 · Dixon-Coles (λ fusionada, ρ="+RHO+")", m:R.M4},
+  ];
+  if (R.M3) list.push({n:"M3 · Cuotas implícitas (sin margen)", m:R.M3});
+  document.getElementById("mList").innerHTML = list.map(({n,m})=>{
+    const lamLine = m.lam != null
+      ? '<div class="mf">λ '+nA+': '+m.lam.toFixed(2)+' · λ '+nB+': '+m.mu.toFixed(2)+'</div>' : "";
+    return '<div class="mi"><div class="mn">'+n+'</div>'
+      + bar("Gana "+nA, m.hw, "b1", "var(--blue)")
+      + bar("Empate", m.d, "b2", "var(--yellow)")
+      + bar("Gana "+nB, m.aw, "b3", "var(--red)")
+      + lamLine + '</div>';
+  }).join("");
+  function bar(l,v,cls,col){
+    return '<div class="pr"><span class="pl">'+l+'</span><span class="pv" style="color:'+col+'">'+fmt(v)+'</span></div>'
+      + '<div class="bb"><div class="bf '+cls+'" style="width:'+(v*100)+'%"></div></div>';
+  }
+}
+
+/* ═══════════ KELLY MANUAL ═══════════ */
+function calcKelly(){
+  const p = parseFloat(document.getElementById("kP").value)/100;
+  const o = parseFloat(document.getElementById("kO").value);
+  const out = document.getElementById("kOut");
+  if (isNaN(p) || isNaN(o) || p<=0 || p>=1 || o<=1){
+    out.className = "kout ku";
+    out.textContent = "Ingresa probabilidad (1–99%) y cuota mayor a 1.00.";
     return;
   }
-  const total=h.length;
-  const ganadas=h.filter(e=>e.beneficio>0).length;
-  const roi=h.reduce((s,e)=>s+e.beneficio,0)/h.reduce((s,e)=>s+e.monto,0)*100;
-  // Streak
-  let racha=0, tipoRacha=null;
-  for(let i=h.length-1;i>=0;i--){
-    const t=h[i].beneficio>0?'G':'P';
-    if(!tipoRacha){tipoRacha=t;racha=1;}
-    else if(t===tipoRacha) racha++;
+  const k = kelly(p, o);
+  const bk = loadState().bankroll;
+  if (k.k <= 0){
+    out.className = "kout kn";
+    out.innerHTML = "<b>Sin valor.</b> Cuota justa: <b>"+k.fair.toFixed(2)+"</b> · mercado: <b>"+o.toFixed(2)
+      + "</b><br>Edge: <b>"+(k.edge*100).toFixed(1)+"%</b> → no apostar.";
+  } else {
+    const q = k.k * KELLY_FRAC;
+    out.className = "kout kp";
+    out.innerHTML = "<b>Hay valor.</b> Cuota justa: <b>"+k.fair.toFixed(2)+"</b> · mercado: <b>"+o.toFixed(2)+"</b><br>"
+      + "Edge: <b>+"+(k.edge*100).toFixed(1)+"%</b> · Kelly completo: <b>"+(k.k*100).toFixed(1)+"%</b><br>"
+      + "¼ Kelly: <b>"+(q*100).toFixed(1)+"%</b> = <b>$"+(q*bk).toFixed(2)+"</b> de $"+bk.toFixed(2);
+  }
+}
+
+/* ═══════════ BANKROLL ═══════════ */
+function updateBadge(){
+  const s = loadState();
+  document.getElementById("bkBadge").textContent = "$"+s.bankroll.toFixed(2);
+  document.getElementById("bkA").textContent = "$"+s.bankroll.toLocaleString("es",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const diff = s.bankroll - 1000;
+  const el = document.getElementById("bkP");
+  el.style.color = diff >= 0 ? "var(--green)" : "var(--red)";
+  el.textContent = "P/L: "+(diff>=0?"+":"")+"$"+diff.toFixed(2)+" ("+(diff>=0?"+":"")+(diff/10).toFixed(1)+"%)";
+}
+
+function registerBet(){
+  const partido = document.getElementById("rP").value.trim();
+  const tipo = document.getElementById("rT").value;
+  const resultado = document.getElementById("rR").value;
+  const monto = parseFloat(document.getElementById("rM").value);
+  const cuota = parseFloat(document.getElementById("rC").value);
+  if (!partido || !(monto > 0) || !(cuota > 1)){
+    alert("Completa partido, monto (> 0) y cuota (> 1.00)."); return;
+  }
+  const s = loadState();
+  if (monto > s.bankroll){
+    alert("Monto mayor que tu bankroll ($"+s.bankroll.toFixed(2)+")."); return;
+  }
+  const gano = resultado === tipo;
+  const beneficio = gano ? monto*(cuota-1) : -monto;
+  s.bankroll = Math.max(0, +(s.bankroll + beneficio).toFixed(2));
+  s.historial.push({
+    partido, tipo, resultado,
+    monto: +monto.toFixed(2), cuota: +cuota.toFixed(2),
+    beneficio: +beneficio.toFixed(2), bankroll: s.bankroll,
+    ts: new Date().toISOString().slice(0,10),
+  });
+  saveState(s);
+  updateBadge(); drawChart();
+  document.getElementById("rM").value = "";
+  document.getElementById("rC").value = "";
+  alert(gano
+    ? "Ganaste +$"+beneficio.toFixed(2)+". Bankroll: $"+s.bankroll.toFixed(2)
+    : "Perdiste $"+Math.abs(beneficio).toFixed(2)+". Bankroll: $"+s.bankroll.toFixed(2));
+}
+
+function resetBank(){
+  if (!confirm("¿Reiniciar bankroll a $1000? El historial se conserva.")) return;
+  const s = loadState(); s.bankroll = 1000; saveState(s);
+  updateBadge(); drawChart();
+}
+
+/* Gráfica de evolución del bankroll */
+function drawChart(){
+  const cv = document.getElementById("chart");
+  if (!cv) return;
+  const s = loadState();
+  const pts = [1000, ...s.historial.map(e=>e.bankroll)];
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 300, H = 70;
+  cv.width = W*dpr; cv.height = H*dpr;
+  const ctx = cv.getContext("2d");
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  if (pts.length < 2){
+    ctx.fillStyle = "#7c7c9a"; ctx.font = "11px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("La gráfica aparece al registrar apuestas", W/2, H/2+4);
+    return;
+  }
+  const min = Math.min(...pts), max = Math.max(...pts);
+  const pad = (max-min)*0.1 || 50;
+  const y = v => H-6 - ((v-(min-pad))/((max+pad)-(min-pad)))*(H-12);
+  const x = i => 4 + i*(W-8)/(pts.length-1);
+  // línea base $1000
+  ctx.strokeStyle = "rgba(124,124,154,.35)"; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(0,y(1000)); ctx.lineTo(W,y(1000)); ctx.stroke();
+  ctx.setLineDash([]);
+  // trayectoria
+  const up = pts[pts.length-1] >= 1000;
+  ctx.strokeStyle = up ? "#00d46a" : "#ff453a";
+  ctx.lineWidth = 2; ctx.lineJoin = "round";
+  ctx.beginPath();
+  pts.forEach((v,i)=> i ? ctx.lineTo(x(i),y(v)) : ctx.moveTo(x(i),y(v)));
+  ctx.stroke();
+}
+
+/* ═══════════ STATS ═══════════ */
+function renderStats(){
+  const s = loadState(), h = s.historial;
+  const set = (id,txt,cls)=>{ const e=document.getElementById(id); e.textContent=txt; if(cls) e.className="sv "+cls; };
+  if (!h.length){
+    set("sRoi","—"); set("sAc","—"); set("sN","0"); set("sStreak","—");
+    set("sBest","—"); set("sWorst","—");
+    document.getElementById("hList").innerHTML = '<div class="empty">Sin apuestas registradas aún.</div>';
+    return;
+  }
+  const invertido = h.reduce((a,e)=>a+e.monto,0);
+  const beneficio = h.reduce((a,e)=>a+e.beneficio,0);
+  const ganadas = h.filter(e=>e.beneficio>0).length;
+  const roi = invertido ? beneficio/invertido*100 : 0;
+  let racha=0, tr=null;
+  for (let i=h.length-1; i>=0; i--){
+    const t = h[i].beneficio>0 ? "G" : "P";
+    if (tr===null){ tr=t; racha=1; }
+    else if (t===tr) racha++;
     else break;
   }
-  document.getElementById('sRoi').textContent=`${roi>=0?'+':''}${roi.toFixed(1)}%`;
-  document.getElementById('sRoi').className=`stat-val ${roi>=0?'green':'red'}`;
-  document.getElementById('sTasa').textContent=`${(ganadas/total*100).toFixed(0)}%`;
-  document.getElementById('sTotal').textContent=total;
-  document.getElementById('sRacha').textContent=`${racha}${tipoRacha==='G'?'G':'P'}`;
-  document.getElementById('sRacha').className=`stat-val ${tipoRacha==='G'?'green':'red'}`;
+  const best = h.reduce((a,e)=>e.beneficio>a.beneficio?e:a);
+  const worst = h.reduce((a,e)=>e.beneficio<a.beneficio?e:a);
+  set("sRoi",(roi>=0?"+":"")+roi.toFixed(1)+"%", roi>=0?"green":"red");
+  set("sAc",(ganadas/h.length*100).toFixed(0)+"%","blue");
+  set("sN",String(h.length),"orange");
+  set("sStreak",racha+(tr==="G"?" ganadas":" perdidas"), tr==="G"?"green":"red");
+  set("sBest","+$"+best.beneficio.toFixed(2),"green");
+  set("sWorst","$"+worst.beneficio.toFixed(2),"red");
 
-  // History list (newest first)
-  document.getElementById('histList').innerHTML=
-    [...h].reverse().map(e=>`
-    <div class="hist-item">
-      <div>
-        <div class="hist-partido">${e.partido}</div>
-        <div class="hist-meta">${e.tipo} · cuota ${e.cuota} · $${e.monto} · ${e.ts||''}</div>
-      </div>
-      <div class="hist-pl ${e.beneficio>0?'pl-pos':'pl-neg'}">
-        ${e.beneficio>0?'+':''}$${e.beneficio.toFixed(2)}
-      </div>
-    </div>`).join('');
+  document.getElementById("hList").innerHTML = [...h].reverse().map(e=>
+    '<div class="hi"><div><div class="hp">'+e.partido+'</div>'
+    + '<div class="hm">'+e.tipo+' · cuota '+e.cuota.toFixed(2)+' · $'+e.monto.toFixed(2)+' · '+(e.ts||"")+'</div></div>'
+    + '<div class="hpl" style="color:'+(e.beneficio>0?"var(--green)":"var(--red)")+'">'
+    + (e.beneficio>0?"+":"")+"$"+e.beneficio.toFixed(2)+'</div></div>').join("");
 }
 
-function clearHistory() {
-  if(!confirm('Borrar todo el historial?')) return;
-  const s=loadState(); s.historial=[]; saveState(s); renderStats();
+function clearHist(){
+  if (!confirm("¿Borrar todo el historial? El bankroll no cambia.")) return;
+  const s = loadState(); s.historial = []; saveState(s);
+  renderStats(); drawChart();
 }
 
-// ══════════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════════
+/* ═══════════ EXPORT / IMPORT ═══════════ */
+function exportData(){
+  const blob = new Blob([JSON.stringify(loadState(), null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "mundial2026-bankroll.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importData(ev){
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const s = JSON.parse(reader.result);
+      if (typeof s.bankroll !== "number" || !Array.isArray(s.historial)) throw new Error("formato");
+      saveState({bankroll:s.bankroll, historial:s.historial});
+      updateBadge(); renderStats(); drawChart();
+      alert("Datos importados: $"+s.bankroll.toFixed(2)+" · "+s.historial.length+" apuestas.");
+    }catch(e){ alert("Archivo inválido: debe ser un JSON exportado por esta app."); }
+  };
+  reader.readAsText(file);
+  ev.target.value = "";
+}
+
+/* ═══════════ INIT ═══════════ */
+updateSedeHint();
 updateBadge();
-runPrediction(); // load default prediction on open
+runPrediction();
+window.addEventListener("resize", drawChart);
 </script>
 </body>
 </html>
