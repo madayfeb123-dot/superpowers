@@ -17,14 +17,15 @@
   --nav:62px; --hdr:54px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow:hidden;}
-body{background:var(--bg);color:var(--text);
+html{height:100%;}
+body{height:100%;display:flex;flex-direction:column;background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  font-size:15px;line-height:1.45;}
+  font-size:15px;line-height:1.45;overflow:hidden;}
 
 header{
-  position:fixed;top:0;left:0;right:0;height:calc(var(--hdr) + env(safe-area-inset-top,0px));
+  flex-shrink:0;
   padding-top:env(safe-area-inset-top,0px);
+  height:calc(var(--hdr) + env(safe-area-inset-top,0px));
   background:rgba(7,7,13,.92);backdrop-filter:blur(14px);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
@@ -35,14 +36,12 @@ header .sub{font-size:.68rem;color:var(--muted);}
 #bkBadge{background:var(--s2);border:1px solid var(--border);border-radius:20px;
   padding:4px 11px;font-size:.78rem;color:var(--green);font-weight:700;}
 
-main{position:fixed;left:0;right:0;
-  top:calc(var(--hdr) + env(safe-area-inset-top,0px));
-  bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px));
-  overflow-y:auto;-webkit-overflow-scrolling:touch;}
+main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;}
 .tab{display:none;padding:14px 13px 20px;}
 .tab.active{display:block;}
 
-nav.bnav{position:fixed;bottom:0;left:0;right:0;
+nav.bnav{flex-shrink:0;
   height:calc(var(--nav) + env(safe-area-inset-bottom,0px));
   padding-bottom:env(safe-area-inset-bottom,0px);
   background:rgba(7,7,13,.95);backdrop-filter:blur(14px);
