@@ -426,6 +426,20 @@ const MAX_G = 11;          // marcadores 0..10
 const KELLY_FRAC = 0.25;   // ¼ Kelly
 const W_CONS = {m1:0.30, m2:0.30, m4:0.40}; // pesos del consenso
 
+/* Auto-calibración: normaliza atk/def al promedio real de la tabla para que
+   un equipo promedio rinda atk=def=1.0 y un partido parejo dé ~2·MEDIA goles
+   totales (≈2.7), en línea con los Mundiales recientes. Sin esto, los índices
+   sesgados al alza inflaban los mercados Over/Under y BTTS. Se recalcula solo
+   si editas TEAMS, así que los datos nuevos siempre quedan bien centrados. */
+const ATK_MEAN = avgField("atk");
+const DEF_MEAN = avgField("def");
+function avgField(key){
+  const v = Object.values(TEAMS).map(t => t[key]);
+  return v.reduce((s, x) => s + x, 0) / v.length;
+}
+const atkN = t => t.atk / ATK_MEAN;   // ataque normalizado (1.0 = promedio del torneo)
+const defN = t => t.def / DEF_MEAN;   // defensa normalizada (1.0 = promedio; <1 = mejor)
+
 /* ═══════════ NÚCLEO MATEMÁTICO ═══════════ */
 
 function pmf(k, lam){
@@ -491,9 +505,12 @@ function derivedMarkets(mat){
 function predict(nA, nB, fase, sede, odds){
   const A = TEAMS[nA], B = TEAMS[nB];
 
-  // Ventaja de sede: solo el anfitrión en su país (o nunca, si "neutral")
-  const hostA = sede === "auto" && !!A.host;
-  const hostB = sede === "auto" && !!B.host && !hostA; // si ambos, A juega "en casa" por orden
+  // Ventaja de sede: solo el anfitrión en su país (o nunca, si "neutral").
+  // Si ambos son anfitriones (ej. México vs EE.UU.) ninguno recibe ventaja:
+  // el partido es entre dos locales, así que se trata como neutral.
+  const bothHosts = !!A.host && !!B.host;
+  const hostA = sede === "auto" && !!A.host && !bothHosts;
+  const hostB = sede === "auto" && !!B.host && !bothHosts;
   const eloA = A.elo + (hostA ? ELO_HOST : 0);
   const eloB = B.elo + (hostB ? ELO_HOST : 0);
 
@@ -502,9 +519,9 @@ function predict(nA, nB, fase, sede, odds){
   const m1v = MEDIA * Math.exp(F_ELO * (eloB - eloA) / 2);
   const M1 = poissonOutcome(l1, m1v);
 
-  // M2 — Ataque/Defensa (fórmula del agente MCP) + boost de anfitrión
-  let l2 = MEDIA * A.atk * B.def * (hostA ? LAMBDA_HOST : 1);
-  let m2v = MEDIA * B.atk * A.def * (hostB ? LAMBDA_HOST : 1);
+  // M2 — Ataque/Defensa con índices normalizados + boost de anfitrión
+  let l2 = MEDIA * atkN(A) * defN(B) * (hostA ? LAMBDA_HOST : 1);
+  let m2v = MEDIA * atkN(B) * defN(A) * (hostB ? LAMBDA_HOST : 1);
   const M2 = poissonOutcome(l2, m2v);
 
   // M4 — Dixon-Coles sobre lambdas combinadas (media geométrica de M1 y M2:
