@@ -230,6 +230,7 @@ select.fi:focus,input.fi:focus{border-color:var(--blue);}
 
   <div id="results" style="display:none">
     <div id="consCard" class="cons"></div>
+    <div id="kpCard" class="card" style="display:none"></div>
     <div id="valueCard" style="display:none">
       <div class="sect">Escáner de valor (modelo vs mercado)</div>
       <div class="card" id="valueList"></div>
@@ -248,8 +249,9 @@ select.fi:focus,input.fi:focus{border-color:var(--blue);}
   </div>
 
   <div class="foot">
-    Simulación en papel con fines educativos. Ratings estimados a inicio del torneo —
-    ajústalos en el código (objeto TEAMS) según la forma real de cada selección.
+    Datos: Ranking FIFA junio 2026 (Elo) · clasificatorias 2023-2026 por confederación
+    (atk/def, amortiguadas 40 % hacia la media para corrección inter-confederación).
+    Jugadores clave: estado al inicio del torneo. Simulación en papel con fines educativos.
     Ningún modelo elimina la varianza del fútbol: gestiona el riesgo con ¼ Kelly.
   </div>
 </section>
@@ -351,69 +353,68 @@ select.fi:focus,input.fi:focus{border-color:var(--blue);}
 <script>
 "use strict";
 
-/* ═══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════
    DATOS — 48 selecciones del Mundial 2026
-   (elo, atk, def) en la misma escala del agente MCP:
-   elo ~1500-1950 · atk = multiplicador ofensivo · def = multiplicador
-   de goles concedidos (menor = mejor defensa).
-   Equipos marcados "po:true" llegaron vía repechaje (marzo 2026):
-   ratings estimados — edítalos si el clasificado real fue otro.
-   ═══════════════════════════════════════════════════════════════ */
+   Fuentes: ranking FIFA junio 2026 (Elo) · estadísticas de clasificatoria
+   2023-2026 (atk / def amortiguadas 40 % hacia 1.0 · umbral def 0.30)
+   kp = jugadores clave a seguir en el torneo
+   host = anfitrión (USA / MEX / CAN) · po = clasificó vía repechaje
+   ══════════════════════════════════════════════════════════════════ */
 const TEAMS = {
-  /* CONMEBOL */
-  "Argentina":      {f:"🇦🇷", c:"CONMEBOL", elo:1950, atk:2.20, def:0.75},
-  "Brasil":         {f:"🇧🇷", c:"CONMEBOL", elo:1900, atk:2.10, def:0.85},
-  "Uruguay":        {f:"🇺🇾", c:"CONMEBOL", elo:1830, atk:1.70, def:0.90},
-  "Colombia":       {f:"🇨🇴", c:"CONMEBOL", elo:1820, atk:1.70, def:0.95},
-  "Ecuador":        {f:"🇪🇨", c:"CONMEBOL", elo:1800, atk:1.50, def:0.85},
-  "Paraguay":       {f:"🇵🇾", c:"CONMEBOL", elo:1760, atk:1.30, def:0.95},
-  /* UEFA */
-  "España":         {f:"🇪🇸", c:"UEFA", elo:1940, atk:2.30, def:0.80},
-  "Francia":        {f:"🇫🇷", c:"UEFA", elo:1930, atk:2.20, def:0.80},
-  "Inglaterra":     {f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", c:"UEFA", elo:1900, atk:2.00, def:0.75},
-  "Portugal":       {f:"🇵🇹", c:"UEFA", elo:1880, atk:2.00, def:0.85},
-  "Países Bajos":   {f:"🇳🇱", c:"UEFA", elo:1860, atk:1.90, def:0.85},
-  "Alemania":       {f:"🇩🇪", c:"UEFA", elo:1850, atk:2.00, def:0.95},
-  "Bélgica":        {f:"🇧🇪", c:"UEFA", elo:1820, atk:1.80, def:1.00},
-  "Croacia":        {f:"🇭🇷", c:"UEFA", elo:1800, atk:1.60, def:0.95},
-  "Noruega":        {f:"🇳🇴", c:"UEFA", elo:1810, atk:2.00, def:1.00},
-  "Suiza":          {f:"🇨🇭", c:"UEFA", elo:1790, atk:1.60, def:0.90},
-  "Austria":        {f:"🇦🇹", c:"UEFA", elo:1780, atk:1.60, def:1.00},
-  "Escocia":        {f:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", c:"UEFA", elo:1720, atk:1.30, def:1.10},
-  "Italia":         {f:"🇮🇹", c:"UEFA", elo:1840, atk:1.70, def:0.85, po:true},
-  "Dinamarca":      {f:"🇩🇰", c:"UEFA", elo:1780, atk:1.60, def:0.95, po:true},
-  "Polonia":        {f:"🇵🇱", c:"UEFA", elo:1740, atk:1.40, def:1.05, po:true},
-  "Turquía":        {f:"🇹🇷", c:"UEFA", elo:1760, atk:1.60, def:1.10, po:true},
-  /* CONCACAF (anfitriones + clasificados) */
-  "México":         {f:"🇲🇽", c:"CONCACAF", elo:1760, atk:1.50, def:1.05, host:true},
-  "Estados Unidos": {f:"🇺🇸", c:"CONCACAF", elo:1750, atk:1.50, def:1.00, host:true},
-  "Canadá":         {f:"🇨🇦", c:"CONCACAF", elo:1730, atk:1.40, def:1.00, host:true},
-  "Panamá":         {f:"🇵🇦", c:"CONCACAF", elo:1700, atk:1.20, def:1.10},
-  "Curazao":        {f:"🇨🇼", c:"CONCACAF", elo:1600, atk:0.90, def:1.25},
-  "Haití":          {f:"🇭🇹", c:"CONCACAF", elo:1580, atk:0.90, def:1.30},
-  /* AFC */
-  "Japón":          {f:"🇯🇵", c:"AFC", elo:1790, atk:1.70, def:0.95},
-  "Irán":           {f:"🇮🇷", c:"AFC", elo:1760, atk:1.40, def:1.00},
-  "Corea del Sur":  {f:"🇰🇷", c:"AFC", elo:1750, atk:1.50, def:1.05},
-  "Australia":      {f:"🇦🇺", c:"AFC", elo:1720, atk:1.30, def:1.05},
-  "Uzbekistán":     {f:"🇺🇿", c:"AFC", elo:1660, atk:1.10, def:1.15},
-  "Arabia Saudita": {f:"🇸🇦", c:"AFC", elo:1680, atk:1.10, def:1.15},
-  "Catar":          {f:"🇶🇦", c:"AFC", elo:1640, atk:1.00, def:1.20},
-  "Jordania":       {f:"🇯🇴", c:"AFC", elo:1630, atk:1.00, def:1.20},
-  "Irak":           {f:"🇮🇶", c:"AFC", elo:1620, atk:0.90, def:1.25, po:true},
-  /* CAF */
-  "Marruecos":      {f:"🇲🇦", c:"CAF", elo:1800, atk:1.60, def:0.85},
-  "Senegal":        {f:"🇸🇳", c:"CAF", elo:1770, atk:1.50, def:0.95},
-  "Egipto":         {f:"🇪🇬", c:"CAF", elo:1740, atk:1.30, def:1.00},
-  "Argelia":        {f:"🇩🇿", c:"CAF", elo:1740, atk:1.40, def:1.05},
-  "Costa de Marfil":{f:"🇨🇮", c:"CAF", elo:1730, atk:1.40, def:1.05},
-  "Túnez":          {f:"🇹🇳", c:"CAF", elo:1700, atk:1.10, def:1.05},
-  "Ghana":          {f:"🇬🇭", c:"CAF", elo:1690, atk:1.30, def:1.15},
-  "Sudáfrica":      {f:"🇿🇦", c:"CAF", elo:1670, atk:1.20, def:1.15},
-  "Cabo Verde":     {f:"🇨🇻", c:"CAF", elo:1640, atk:1.00, def:1.20},
-  "RD Congo":       {f:"🇨🇩", c:"CAF", elo:1640, atk:1.10, def:1.20, po:true},
+  /* CONMEBOL — clasificatoria 2023-2026, 18 jornadas doble vuelta */
+  "Argentina":        {f:"🇦🇷", c:"CONMEBOL", elo:1950, atk:1.42, def:0.73, kp:"L.Messi · L.Martínez · De Paul"},
+  "Brasil":           {f:"🇧🇷", c:"CONMEBOL", elo:1860, atk:1.19, def:0.96, kp:"Vinicius Jr · Rodrygo · Raphinha"},
+  "Colombia":         {f:"🇨🇴", c:"CONMEBOL", elo:1800, atk:1.32, def:0.99, kp:"L.Díaz · J.Cuadrado · R.Arias"},
+  "Uruguay":          {f:"🇺🇾", c:"CONMEBOL", elo:1755, atk:1.12, def:0.79, kp:"Darwin Núñez · Bentancur · Araujo"},
+  "Ecuador":          {f:"🇪🇨", c:"CONMEBOL", elo:1715, atk:0.86, def:0.56, kp:"E.Valencia · M.Caicedo · I.Plata"},
+  "Paraguay":         {f:"🇵🇾", c:"CONMEBOL", elo:1620, atk:0.86, def:0.73, kp:"M.Almirón · A.Sanabria · J.Enciso"},
+  /* UEFA — clasificatoria 2024-2025 */
+  "España":           {f:"🇪🇸", c:"UEFA", elo:1940, atk:1.67, def:0.52, kp:"Yamal · Pedri · Morata · Olmo"},
+  "Francia":          {f:"🇫🇷", c:"UEFA", elo:1925, atk:1.37, def:0.64, kp:"Mbappé · Griezmann · Camavinga"},
+  "Inglaterra":       {f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", c:"UEFA", elo:1890, atk:1.67, def:0.72, kp:"Bellingham · Saka · Kane · Palmer"},
+  "Portugal":         {f:"🇵🇹", c:"UEFA", elo:1870, atk:1.61, def:0.82, kp:"C.Ronaldo · B.Fernandes · R.Leão"},
+  "Países Bajos":     {f:"🇳🇱", c:"UEFA", elo:1850, atk:1.62, def:0.58, kp:"Van Dijk · Gakpo · De Jong · Dumfries"},
+  "Alemania":         {f:"🇩🇪", c:"UEFA", elo:1830, atk:1.37, def:0.58, kp:"Wirtz · Musiala · Kai Havertz"},
+  "Noruega":          {f:"🇳🇴", c:"UEFA", elo:1830, atk:2.08, def:0.63, kp:"E.Haaland (16 goles clasif.) · Ødegaard · Sørloth"},
+  "Bélgica":          {f:"🇧🇪", c:"UEFA", elo:1810, atk:1.58, def:0.67, kp:"De Bruyne · Lukaku · Doku · Trossard"},
+  "Croacia":          {f:"🇭🇷", c:"UEFA", elo:1800, atk:1.31, def:0.81, kp:"Modric · Gvardiol · Perisic"},
+  "Suiza":            {f:"🇨🇭", c:"UEFA", elo:1740, atk:1.25, def:0.52, kp:"X.Shaqiri · G.Xhaka · R.Amdouni"},
+  "Austria":          {f:"🇦🇹", c:"UEFA", elo:1725, atk:1.40, def:0.58, kp:"M.Sabitzer · C.Baumgartner · A.Arnautovic"},
+  "Escocia":          {f:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", c:"UEFA", elo:1695, atk:1.19, def:0.82, kp:"A.Robertson · S.McTominay · J.McGinn"},
+  "Suecia":           {f:"🇸🇪", c:"UEFA", elo:1675, atk:1.08, def:0.81, kp:"A.Isak · D.Kulusevski · V.Gyökeres"},
+  "Turquía":          {f:"🇹🇷", c:"UEFA", elo:1660, atk:1.43, def:1.13, kp:"H.Çalhanoglu · A.Yildiz · C.Akgün"},
+  "Chequia":          {f:"🇨🇿", c:"UEFA", elo:1660, atk:0.99, def:0.72, kp:"T.Soucek · P.Schick · V.Coufal"},
+  "Bosnia y Herz.":   {f:"🇧🇦", c:"UEFA", elo:1630, atk:0.94, def:0.85, kp:"E.Dzeko · M.Pjanic · S.Kolasinac"},
+  /* CONCACAF — anfitriones + clasificados */
+  "México":           {f:"🇲🇽", c:"CONCACAF", elo:1765, atk:1.10, def:0.90, host:true, kp:"H.Lozano · A.Vega · S.Jiménez"},
+  "Estados Unidos":   {f:"🇺🇸", c:"CONCACAF", elo:1760, atk:1.10, def:0.90, host:true, kp:"C.Pulisic · W.McKennie · R.Weah"},
+  "Canadá":           {f:"🇨🇦", c:"CONCACAF", elo:1745, atk:1.00, def:0.90, host:true, kp:"A.Davies · J.David · T.Henry"},
+  "Panamá":           {f:"🇵🇦", c:"CONCACAF", elo:1650, atk:0.90, def:1.00, kp:"A.Murillo · E.Davis · R.Córdoba"},
+  "Curazao":          {f:"🇨🇼", c:"CONCACAF", elo:1560, atk:0.80, def:1.15, kp:"L.Gómez · J.Antonucci"},
+  "Haití":            {f:"🇭🇹", c:"CONCACAF", elo:1545, atk:0.75, def:1.15, kp:"F.Thomas · N.Noel"},
+  /* AFC — fase 3 de clasificatoria asiática, 10 jornadas */
+  "Japón":            {f:"🇯🇵", c:"AFC", elo:1790, atk:1.17, def:0.61, kp:"Mitoma · Kubo · Doan · Ueda"},
+  "Irán":             {f:"🇮🇷", c:"AFC", elo:1710, atk:1.21, def:0.74, kp:"S.Azmoun · M.Taremi · A.Beiranvand"},
+  "Corea del Sur":    {f:"🇰🇷", c:"AFC", elo:1720, atk:1.26, def:0.70, kp:"Heung-min Son · L.Kang-in · K.Min-jae"},
+  "Australia":        {f:"🇦🇺", c:"AFC", elo:1705, atk:1.00, def:0.74, kp:"M.Leckie · R.McGree · M.Irvine"},
+  "Uzbekistán":       {f:"🇺🇿", c:"AFC", elo:1620, atk:1.00, def:0.70, kp:"I.Kobilov · D.Yuldoshev · D.Temur"},
+  "Arabia Saudita":   {f:"🇸🇦", c:"AFC", elo:1640, atk:0.87, def:0.83, kp:"S.Al Dawsari · F.Al Malki · M.Al Burayk"},
+  "Catar":            {f:"🇶🇦", c:"AFC", elo:1660, atk:0.83, def:0.87, kp:"A.Al Moez Ali · A.Hatem · A.Al Ahrak"},
+  "Jordania":         {f:"🇯🇴", c:"AFC", elo:1610, atk:1.09, def:0.74, kp:"M.Al Tamari · Y.Naser · A.Al Hamad"},
+  "Irak":             {f:"🇮🇶", c:"AFC", elo:1625, atk:0.87, def:0.83, kp:"A.Al Hamad · H.Abbas · A.Mohanad"},
+  /* CAF — clasificatoria africana 2023-2025, 8-10 jornadas */
+  "Marruecos":        {f:"🇲🇦", c:"CAF", elo:1820, atk:1.72, def:0.52, kp:"H.Ziyech · A.Hakimi · Y.En-Nesyri"},
+  "Senegal":          {f:"🇸🇳", c:"CAF", elo:1775, atk:1.46, def:0.54, kp:"S.Mané · I.Sarr · E.Mendy"},
+  "Egipto":           {f:"🇪🇬", c:"CAF", elo:1700, atk:1.36, def:0.50, kp:"M.Salah · O.Marmoush · A.El Shenawy"},
+  "Costa de Marfil":  {f:"🇨🇮", c:"CAF", elo:1690, atk:1.60, def:0.50, kp:"F.Kessié · S.Aurier · W.Zaha"},
+  "Argelia":          {f:"🇩🇿", c:"CAF", elo:1680, atk:1.55, def:0.78, kp:"R.Mahrez · I.Slimani · Y.Benrahma"},
+  "Túnez":            {f:"🇹🇳", c:"CAF", elo:1665, atk:1.46, def:0.54, kp:"W.Khazri · H.Msakni · A.Abdi"},
+  "Ghana":            {f:"🇬🇭", c:"CAF", elo:1615, atk:1.46, def:0.78, kp:"T.Partey · I.Ayew · J.Ayew"},
+  "Sudáfrica":        {f:"🇿🇦", c:"CAF", elo:1630, atk:1.12, def:0.83, kp:"P.Tau · T.Zwane · R.Williams"},
+  "Cabo Verde":       {f:"🇨🇻", c:"CAF", elo:1600, atk:1.17, def:0.78, kp:"G.Tavares · D.Semedo · G.Ramos"},
+  "RD Congo":         {f:"🇨🇩", c:"CAF", elo:1640, atk:1.02, def:0.78, kp:"C.Banza · A.Lukoki · G.Kakuta"},
   /* OFC */
-  "Nueva Zelanda":  {f:"🇳🇿", c:"OFC", elo:1620, atk:1.00, def:1.25},
+  "Nueva Zelanda":    {f:"🇳🇿", c:"OFC", elo:1540, atk:1.31, def:0.85, kp:"C.Wood · R.De Vries · N.Marsman"},
 };
 
 /* Parámetros del modelo (idénticos al agente MCP donde aplica) */
@@ -657,6 +658,7 @@ function runPrediction(){
   const R = predict(nA, nB, fase, sede, odds);
 
   renderConsensus(nA, nB, R);
+  renderKeyPlayers(nA, nB);
   renderValue(nA, nB, R, odds);
   renderMarkets(R.markets);
   renderScores(nA, nB, R.M4.mat);
@@ -695,6 +697,19 @@ function renderConsensus(nA, nB, R){
     + (low ? "Modelos alineados — confianza alta" : "Modelos divergen — reduce el tamaño de apuesta")
     + ' (σ='+div.toFixed(3)+')</span></div>';
   document.getElementById("consCard").innerHTML = html;
+}
+
+function renderKeyPlayers(nA, nB){
+  const card = document.getElementById("kpCard");
+  const A = TEAMS[nA], B = TEAMS[nB];
+  if (!A.kp && !B.kp){ card.style.display = "none"; return; }
+  card.style.display = "block";
+  let html = '<div class="ct">Jugadores clave</div>';
+  if (A.kp) html += '<div style="margin-bottom:8px"><span style="font-weight:700">'
+    +A.f+' '+nA+'</span><div class="hint" style="margin:4px 0 0">'+A.kp+'</div></div>';
+  if (B.kp) html += '<div><span style="font-weight:700">'+B.f+' '+nB
+    +'</span><div class="hint" style="margin:4px 0 0">'+B.kp+'</div></div>';
+  card.innerHTML = html;
 }
 
 function renderValue(nA, nB, R, odds){
