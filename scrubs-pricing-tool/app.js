@@ -101,22 +101,26 @@ function calculatePrice(params) {
   const topBrand    = cfg.brands.find(b => b.id === topBrandId);
   const bottomBrand = cfg.brands.find(b => b.id === bottomBrandId);
 
-  // Dominant brand = lower tier number (more premium) → higher base price
-  const dominantBrand = topBrand.tier <= bottomBrand.tier ? topBrand : bottomBrand;
-  const basePrice = dominantBrand.basePrice;
-
-  // FM — brand match factor
-  const sameBrand = topBrandId === bottomBrandId;
-  const FM = sameBrand ? 1.0 : cfg.factors.mixedBrands;
-  const fmLabel = sameBrand ? "Misma marca (×1.00)" : `Marcas distintas (×${FM.toFixed(2)})`;
-
-  // FC — condition factor
-  let avgScore;
+  // Dominant brand, FM and avg score differ between set and single-piece mode.
+  let dominantBrand, sameBrand, FM, fmLabel, avgScore;
   if (isSet) {
+    // Dominant brand = lower tier number (more premium) → higher base price
+    dominantBrand = topBrand.tier <= bottomBrand.tier ? topBrand : bottomBrand;
+    sameBrand = topBrandId === bottomBrandId;
+    FM = sameBrand ? 1.0 : cfg.factors.mixedBrands;
+    fmLabel = sameBrand ? "Misma marca (×1.00)" : `Marcas distintas (×${FM.toFixed(2)})`;
     avgScore = Math.round(((topScore + bottomScore) / 2) * 10) / 10;
   } else {
+    // Single piece: only the active garment's brand matters, no mixed penalty
+    dominantBrand = activePiece === "top" ? topBrand : bottomBrand;
+    sameBrand = true;
+    FM = 1.0;
+    fmLabel = "Pieza única (×1.00)";
     avgScore = activePiece === "top" ? topScore : bottomScore;
   }
+  const basePrice = dominantBrand.basePrice;
+
+  // FC — condition factor
   const condBand = getConditionBand(avgScore);
   const FC = condBand.factor;
 
