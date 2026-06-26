@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Cotizador de Scrubs</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">⚙</div>
+  <div>
+    <h1>Panel de Administración</h1>
+    <p>Edita marcas, factores y exporta el historial</p>
+  </div>
+  <nav class="header-nav">
+    <a href="index.html">← Cotizador</a>
+  </nav>
+</header>
+
+<main class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="brands">📋 Marcas</button>
+    <button class="tab-btn" data-tab="factors">⚙ Factores</button>
+    <button class="tab-btn" data-tab="history">📜 Historial</button>
+    <button class="tab-btn" data-tab="io">↕ Exportar / Importar</button>
+  </div>
+
+  <!-- ── Panel: Marcas ──────────────────────────────────────────────────── -->
+  <div id="panel-brands" class="tab-panel active">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📋</div>
+        <h2>Tabla de marcas</h2>
+      </div>
+
+      <p class="text-muted" style="margin-bottom:16px">
+        El <strong>Precio base</strong> es el precio del conjunto en estado perfecto (misma marca, excelente condición).
+        El sistema nunca superará este techo ni bajará del piso configurado.
+      </p>
+
+      <div id="brand-alert" class="alert alert-success" hidden></div>
+
+      <div style="overflow-x:auto">
+        <table class="brand-table">
+          <thead>
+            <tr>
+              <th>ID interno</th>
+              <th>Nombre visible</th>
+              <th>Tier</th>
+              <th>Precio base conjunto (MXN)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="brand-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="action-bar mt-4">
+        <button id="btn-add-brand" class="btn btn-secondary">+ Agregar marca</button>
+        <button id="btn-save-brands" class="btn btn-primary">💾 Guardar marcas</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Panel: Factores ────────────────────────────────────────────────── -->
+  <div id="panel-factors" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">⚙</div>
+        <h2>Factores de ajuste</h2>
+      </div>
+
+      <div id="factors-alert" class="alert alert-success" hidden></div>
+
+      <div class="factor-grid">
+        <div class="factor-field">
+          <label for="factor-mixed">FM — Marcas distintas</label>
+          <input type="number" id="factor-mixed" min="0" max="1" step="0.01">
+          <p class="factor-hint">Multiplicador cuando filipina y pantalón son de marcas diferentes (ej. 0.90 = −10 %)</p>
+        </div>
+        <div class="factor-field">
+          <label for="factor-loose">FS — Pieza suelta</label>
+          <input type="number" id="factor-loose" min="0" max="1" step="0.01">
+          <p class="factor-hint">Multiplicador cuando se vende una sola prenda (ej. 0.65)</p>
+        </div>
+        <div class="factor-field">
+          <label for="floor-set">Piso mínimo — Conjunto (MXN)</label>
+          <input type="number" id="floor-set" min="0" step="10">
+          <p class="factor-hint">Ningún conjunto se vende por menos de este precio</p>
+        </div>
+        <div class="factor-field">
+          <label for="floor-piece">Piso mínimo — Pieza suelta (MXN)</label>
+          <input type="number" id="floor-piece" min="0" step="10">
+          <p class="factor-hint">Ninguna pieza suelta se vende por menos de este precio</p>
+        </div>
+        <div class="factor-field">
+          <label for="round-to">Redondeo (MXN)</label>
+          <input type="number" id="round-to" min="1" step="5">
+          <p class="factor-hint">El precio final se redondea al múltiplo más cercano (ej. 10)</p>
+        </div>
+      </div>
+
+      <div class="section-divider mt-6">Tabla de condición (FC)</div>
+      <p class="text-muted" style="margin-bottom:12px">
+        El puntaje promedio del conjunto se compara con estos umbrales de mayor a menor.
+        El primer umbral que se cumpla determina el factor de condición.
+      </p>
+
+      <div style="overflow-x:auto">
+        <table class="brand-table">
+          <thead>
+            <tr>
+              <th>Puntaje mínimo (≥)</th>
+              <th>Factor FC</th>
+              <th>Etiqueta</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="threshold-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="action-bar mt-4">
+        <button id="btn-add-threshold" class="btn btn-secondary">+ Agregar umbral</button>
+        <button id="btn-save-factors" class="btn btn-primary">💾 Guardar factores</button>
+        <button id="btn-reset-config" class="btn btn-danger" style="margin-left:auto">
+          ↺ Restaurar por defecto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Panel: Historial ──────────────────────────────────────────────── -->
+  <div id="panel-history" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📜</div>
+        <h2>Historial de cotizaciones</h2>
+      </div>
+
+      <div id="admin-history-list" style="overflow-x:auto"></div>
+
+      <div class="action-bar mt-4">
+        <button id="btn-export-history" class="btn btn-secondary">⬇ Exportar CSV</button>
+        <button id="btn-clear-admin-history" class="btn btn-danger">Limpiar historial</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Panel: Exportar / Importar ─────────────────────────────────────── -->
+  <div id="panel-io" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">↕</div>
+        <h2>Exportar / Importar configuración</h2>
+      </div>
+
+      <p class="text-muted" style="margin-bottom:20px">
+        Guarda la configuración actual (marcas y factores) como un archivo JSON que puedes
+        editar con cualquier editor de texto y volver a cargar aquí.
+      </p>
+
+      <div id="import-alert" class="alert" hidden></div>
+
+      <div class="factor-grid">
+        <div class="factor-field">
+          <label>Exportar configuración</label>
+          <button id="btn-export" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px">
+            ⬇ Descargar scrubs-config.json
+          </button>
+          <p class="factor-hint">Descarga la configuración activa como JSON</p>
+        </div>
+        <div class="factor-field">
+          <label>Importar configuración</label>
+          <button id="btn-import" class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:4px">
+            ⬆ Cargar JSON
+          </button>
+          <input type="file" id="import-file" accept=".json" hidden>
+          <p class="factor-hint">Reemplaza la configuración actual con el archivo seleccionado</p>
+        </div>
+      </div>
+
+      <div class="section-divider mt-6">Formato del archivo JSON</div>
+      <pre style="background:var(--c-bg);border-radius:8px;padding:16px;font-size:.78rem;overflow-x:auto;line-height:1.6">{
+  "brands": [
+    { "id": "figs", "name": "FIGS", "tier": 1, "basePrice": 850 },
+    ...
+  ],
+  "factors": {
+    "mixedBrands": 0.90,
+    "loosePiece": 0.65,
+    "conditionThresholds": [
+      { "minScore": 3.5, "factor": 1.00, "label": "Excelente" },
+      { "minScore": 3.0, "factor": 0.95, "label": "Muy bueno" },
+      { "minScore": 2.5, "factor": 0.88, "label": "Bueno" },
+      { "minScore": 2.0, "factor": 0.80, "label": "Regular" },
+      { "minScore": 0.0, "factor": 0.70, "label": "Deteriorado" }
+    ]
+  },
+  "floors": { "set": 280, "piece": 160 },
+  "roundTo": 10
+}</pre>
+    </div>
+  </div>
+
+</main>
+
+<script src="config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

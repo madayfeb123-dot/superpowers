@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotizador de Scrubs</title>
+<style>
+/* ─── Variables ─────────────────────────────────────────────────────────── */
+:root {
+  --c-primary:#1D7A8A; --c-primary-dk:#155f6d; --c-primary-lt:#e6f4f6;
+  --c-accent:#C05C8A; --c-success:#2E9E6B; --c-warn:#D97706; --c-danger:#DC3545;
+  --c-bg:#F0F4F7; --c-surface:#FFFFFF; --c-border:#D1D9E0;
+  --c-text:#1C2B36; --c-text-muted:#5A7080; --c-text-on-pri:#FFFFFF;
+  --r-card:12px; --r-btn:8px;
+  --shadow:0 2px 12px rgba(0,0,0,.10); --shadow-lg:0 6px 24px rgba(0,0,0,.14);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body { font-family:var(--font); background:var(--c-bg); color:var(--c-text); min-height:100vh; font-size:15px; line-height:1.55; }
+
+/* ─── Header ────────────────────────────────────────────────────────────── */
+.site-header { background:linear-gradient(135deg,var(--c-primary) 0%,var(--c-primary-dk) 100%); color:var(--c-text-on-pri); padding:20px 24px; display:flex; align-items:center; gap:16px; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+.site-header .logo { font-size:28px; line-height:1; }
+.site-header h1 { font-size:1.45rem; font-weight:700; letter-spacing:-.3px; }
+.site-header p { font-size:.85rem; opacity:.85; }
+.header-nav { margin-left:auto; display:flex; gap:8px; }
+.header-nav button { color:var(--c-text-on-pri); background:none; font-family:var(--font); font-size:.85rem; opacity:.9; padding:6px 14px; border:1px solid rgba(255,255,255,.4); border-radius:var(--r-btn); transition:background .15s; cursor:pointer; }
+.header-nav button:hover { background:rgba(255,255,255,.15); }
+.header-nav button.active { background:rgba(255,255,255,.28); opacity:1; font-weight:700; }
+
+/* ─── Layout ────────────────────────────────────────────────────────────── */
+.container { max-width:900px; margin:0 auto; padding:28px 16px 60px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+@media (max-width:640px) { .grid-2 { grid-template-columns:1fr; } }
+
+/* ─── Cards ─────────────────────────────────────────────────────────────── */
+.card { background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow); padding:22px 20px; transition:opacity .25s,filter .25s; }
+.card.card-faded { opacity:.42; filter:grayscale(.4); pointer-events:none; }
+.card-header { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+.card-icon { font-size:22px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--c-primary-lt); border-radius:8px; }
+.card-header h2 { font-size:1.05rem; font-weight:700; color:var(--c-primary-dk); }
+
+/* ─── Mode toggle ───────────────────────────────────────────────────────── */
+.mode-toggle { background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow); padding:16px 20px; margin-bottom:24px; }
+.mode-toggle h3 { font-size:.9rem; color:var(--c-text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:.6px; font-weight:600; }
+.mode-options { display:flex; gap:12px; flex-wrap:wrap; }
+.mode-option { cursor:pointer; display:flex; align-items:center; gap:8px; padding:10px 18px; border:2px solid var(--c-border); border-radius:40px; font-weight:500; font-size:.9rem; transition:border-color .15s,background .15s,color .15s; }
+.mode-option input[type="radio"] { display:none; }
+.mode-option:has(input:checked) { border-color:var(--c-primary); background:var(--c-primary-lt); color:var(--c-primary-dk); }
+.mode-option .mode-icon { font-size:18px; }
+
+/* ─── Form ──────────────────────────────────────────────────────────────── */
+.field-group { margin-bottom:16px; }
+.field-group label,.field-label { display:block; font-size:.83rem; font-weight:600; color:var(--c-text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+select { width:100%; padding:9px 12px; border:1.5px solid var(--c-border); border-radius:var(--r-btn); font-family:var(--font); font-size:.95rem; background:var(--c-surface); color:var(--c-text); cursor:pointer; transition:border-color .15s; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A7080' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px; }
+select:focus { outline:none; border-color:var(--c-primary); box-shadow:0 0 0 3px rgba(29,122,138,.15); }
+.radio-group { display:flex; gap:6px; flex-wrap:wrap; }
+.radio-option { cursor:pointer; font-size:.83rem; padding:5px 12px; border:1.5px solid var(--c-border); border-radius:20px; color:var(--c-text-muted); transition:border-color .13s,background .13s,color .13s; white-space:nowrap; }
+.radio-option input[type="radio"] { display:none; }
+.radio-option:has(input:checked) { border-color:var(--c-primary); background:var(--c-primary-lt); color:var(--c-primary-dk); font-weight:600; }
+.check-group { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+.check-item { display:flex; align-items:flex-start; gap:9px; cursor:pointer; font-size:.9rem; }
+.check-item input[type="checkbox"] { width:16px; height:16px; margin-top:2px; accent-color:var(--c-primary); cursor:pointer; flex-shrink:0; }
+.check-item .check-label { line-height:1.35; }
+.check-item .check-note { font-size:.78rem; color:var(--c-text-muted); display:block; }
+
+/* ─── Dividers ──────────────────────────────────────────────────────────── */
+.section-divider { margin:16px 0 12px; font-size:.8rem; font-weight:700; color:var(--c-text-muted); text-transform:uppercase; letter-spacing:.7px; display:flex; align-items:center; gap:8px; }
+.section-divider::before,.section-divider::after { content:""; flex:1; height:1px; background:var(--c-border); }
+
+/* ─── Buttons ───────────────────────────────────────────────────────────── */
+.btn { display:inline-flex; align-items:center; gap:7px; padding:11px 22px; border:none; border-radius:var(--r-btn); font-family:var(--font); font-size:.95rem; font-weight:600; cursor:pointer; transition:background .15s,transform .1s,box-shadow .15s; text-decoration:none; }
+.btn:active { transform:scale(.97); }
+.btn-primary { background:var(--c-primary); color:#fff; box-shadow:0 3px 10px rgba(29,122,138,.3); }
+.btn-primary:hover { background:var(--c-primary-dk); box-shadow:0 4px 14px rgba(29,122,138,.4); }
+.btn-secondary { background:var(--c-surface); color:var(--c-text); border:1.5px solid var(--c-border); }
+.btn-secondary:hover { background:var(--c-bg); }
+.btn-success { background:var(--c-success); color:#fff; }
+.btn-success:hover { background:#257a54; }
+.btn-danger { background:transparent; color:var(--c-danger); border:1.5px solid var(--c-danger); font-size:.85rem; padding:7px 14px; }
+.btn-danger:hover { background:#fff0f0; }
+.btn-lg { padding:15px 36px; font-size:1.1rem; border-radius:10px; }
+.btn-full { width:100%; justify-content:center; }
+.action-bar { display:flex; gap:12px; align-items:center; margin-top:28px; flex-wrap:wrap; }
+
+/* ─── Result ────────────────────────────────────────────────────────────── */
+#result-section { margin-top:28px; }
+.result-card { background:linear-gradient(135deg,var(--c-primary) 0%,var(--c-primary-dk) 100%); color:#fff; border-radius:var(--r-card); padding:28px 24px; box-shadow:var(--shadow-lg); text-align:center; margin-bottom:16px; }
+.result-label { font-size:.85rem; opacity:.85; text-transform:uppercase; letter-spacing:.7px; margin-bottom:6px; }
+.result-price { font-size:3.2rem; font-weight:800; letter-spacing:-1px; line-height:1; margin-bottom:4px; }
+.result-currency { font-size:1.1rem; opacity:.8; }
+.score-bar-wrap { background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow); padding:16px 20px; margin-bottom:16px; }
+.score-bar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:.88rem; }
+.score-bar-title { font-weight:600; color:var(--c-text-muted); }
+#score-label { font-weight:700; }
+.score-bar { height:10px; background:var(--c-border); border-radius:10px; overflow:hidden; }
+.score-fill { height:100%; border-radius:10px; transition:width .5s cubic-bezier(.4,0,.2,1); }
+.score-excellent { background:#2E9E6B; } .score-good { background:#5BAD82; } .score-fair { background:#D4A020; } .score-poor { background:#D97706; } .score-bad { background:#DC3545; }
+.score-garments { display:flex; gap:16px; margin-top:10px; font-size:.83rem; color:var(--c-text-muted); }
+.breakdown-card { background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow); overflow:hidden; margin-bottom:16px; }
+.breakdown-card h3 { padding:14px 20px; font-size:.9rem; font-weight:700; color:var(--c-primary-dk); background:var(--c-primary-lt); border-bottom:1px solid var(--c-border); }
+#breakdown-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+#breakdown-table tr:not(:last-child) { border-bottom:1px solid var(--c-border); }
+#breakdown-table th { text-align:left; padding:10px 20px; color:var(--c-text-muted); font-weight:500; width:46%; }
+#breakdown-table td { padding:10px 20px; font-weight:600; color:var(--c-text); }
+#breakdown-table tr:last-child td,#breakdown-table tr:last-child th { background:var(--c-primary-lt); color:var(--c-primary-dk); font-weight:700; }
+
+/* ─── History ───────────────────────────────────────────────────────────── */
+.history-section { margin-top:32px; background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow); overflow:hidden; }
+#history-toggle { width:100%; background:none; border:none; padding:16px 20px; text-align:left; font-family:var(--font); font-size:.95rem; font-weight:700; color:var(--c-text); cursor:pointer; display:flex; align-items:center; justify-content:space-between; }
+#history-toggle:hover { background:var(--c-bg); }
+.history-body { border-top:1px solid var(--c-border); padding:12px 16px 16px; }
+.history-toolbar { display:flex; justify-content:flex-end; margin-bottom:10px; }
+.history-card { display:flex; align-items:center; gap:14px; padding:10px 14px; border-radius:8px; margin-bottom:6px; background:var(--c-bg); transition:background .12s; }
+.history-card:hover { background:#e8edf2; }
+.history-info { flex:1; display:flex; flex-wrap:wrap; gap:6px 14px; font-size:.84rem; color:var(--c-text-muted); }
+.history-brands { font-weight:700; color:var(--c-text); font-size:.9rem; }
+.history-price { font-weight:800; color:var(--c-primary-dk); font-size:1rem; white-space:nowrap; }
+.btn-delete-history { background:none; border:none; color:var(--c-text-muted); cursor:pointer; font-size:.85rem; padding:4px 6px; border-radius:4px; line-height:1; transition:background .12s,color .12s; }
+.btn-delete-history:hover { background:#ffe0e0; color:var(--c-danger); }
+#history-empty { text-align:center; color:var(--c-text-muted); font-size:.88rem; padding:20px 0; }
+
+/* ─── Utility ───────────────────────────────────────────────────────────── */
+[hidden] { display:none !important; }
+.mt-4 { margin-top:16px; } .mt-6 { margin-top:24px; }
+.text-muted { color:var(--c-text-muted); font-size:.85rem; }
+
+/* ─── Admin ─────────────────────────────────────────────────────────────── */
+.tabs { display:flex; gap:0; border-bottom:2px solid var(--c-border); margin-bottom:24px; }
+.tab-btn { background:none; border:none; border-bottom:3px solid transparent; margin-bottom:-2px; padding:10px 20px; font-family:var(--font); font-size:.93rem; font-weight:600; cursor:pointer; color:var(--c-text-muted); transition:color .15s,border-color .15s; }
+.tab-btn.active { color:var(--c-primary); border-bottom-color:var(--c-primary); }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+.brand-table { width:100%; border-collapse:collapse; font-size:.9rem; }
+.brand-table th { text-align:left; padding:8px 12px; background:var(--c-primary-lt); color:var(--c-primary-dk); font-weight:700; font-size:.8rem; text-transform:uppercase; }
+.brand-table td { padding:8px 12px; border-bottom:1px solid var(--c-border); vertical-align:middle; }
+.brand-table tr:hover td { background:#f5f8fb; }
+.brand-table input[type="text"],.brand-table input[type="number"],.brand-table select { padding:5px 8px; border:1.5px solid var(--c-border); border-radius:5px; font-family:var(--font); font-size:.88rem; width:100%; background:var(--c-surface); }
+.brand-table input:focus,.brand-table select:focus { outline:none; border-color:var(--c-primary); }
+.factor-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:520px) { .factor-grid { grid-template-columns:1fr; } }
+.factor-field { background:var(--c-bg); border-radius:8px; padding:14px 16px; }
+.factor-field label { display:block; font-size:.82rem; font-weight:700; color:var(--c-text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.factor-field input[type="number"] { width:100%; padding:8px 10px; border:1.5px solid var(--c-border); border-radius:var(--r-btn); font-family:var(--font); font-size:1rem; background:var(--c-surface); }
+.factor-field input:focus { outline:none; border-color:var(--c-primary); box-shadow:0 0 0 3px rgba(29,122,138,.15); }
+.factor-field .factor-hint { font-size:.78rem; color:var(--c-text-muted); margin-top:4px; }
+.alert { padding:12px 16px; border-radius:8px; font-size:.9rem; margin-bottom:16px; }
+.alert-success { background:#e6f9f0; color:var(--c-success); border:1px solid #b0e6cc; }
+.alert-danger { background:#fff0f0; color:var(--c-danger); border:1px solid #f5b8b8; }
+@media (max-width:500px) {
+  .result-price { font-size:2.4rem; }
+  .site-header h1 { font-size:1.2rem; }
+  .action-bar { flex-direction:column; }
+  .btn-lg { padding:13px 24px; font-size:1rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">🩺</div>
+  <div>
+    <h1>Cotizador de Scrubs</h1>
+    <p>Precio objetivo y reproducible para conjuntos médicos de segunda mano</p>
+  </div>
+  <nav class="header-nav">
+    <button id="nav-cotizador" class="active">🩺 Cotizador</button>
+    <button id="nav-admin">⚙ Admin</button>
+  </nav>
+</header>
+
+<!-- ═══════════════════════ VISTA: COTIZADOR ═══════════════════════ -->
+<main class="container" id="view-cotizador">
+
+  <div class="mode-toggle">
+    <h3>¿Qué vas a cotizar?</h3>
+    <div class="mode-options">
+      <label class="mode-option"><input type="radio" name="mode" value="set" checked><span class="mode-icon">👔👖</span> Conjunto completo</label>
+      <label class="mode-option"><input type="radio" name="mode" value="top"><span class="mode-icon">👔</span> Solo filipina</label>
+      <label class="mode-option"><input type="radio" name="mode" value="bottom"><span class="mode-icon">👖</span> Solo pantalón</label>
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- FILIPINA -->
+    <div class="card" id="card-top">
+      <div class="card-header"><div class="card-icon">👔</div><h2>Filipina</h2></div>
+      <div class="field-group"><label for="top-brand">Marca</label><select id="top-brand"></select></div>
+
+      <div class="section-divider">Defectos visuales</div>
+      <div class="field-group"><span class="field-label">Manchas visibles</span>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="top_manchas" value="ninguna" data-default="true" checked> Ninguna</label>
+          <label class="radio-option"><input type="radio" name="top_manchas" value="pequeña"> Pequeña/localizada</label>
+          <label class="radio-option"><input type="radio" name="top_manchas" value="varias"> Varias o grandes</label>
+        </div>
+      </div>
+      <div class="field-group"><span class="field-label">Desgaste de color</span>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="top_desgaste" value="no" data-default="true" checked> No</label>
+          <label class="radio-option"><input type="radio" name="top_desgaste" value="ligero"> Ligero</label>
+          <label class="radio-option"><input type="radio" name="top_desgaste" value="notable"> Notable</label>
+        </div>
+      </div>
+      <div class="field-group"><span class="field-label">Pilling de tela <span class="text-muted">(bolitas por lavado)</span></span>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="top_pilling" value="no" data-default="true" checked> No</label>
+          <label class="radio-option"><input type="radio" name="top_pilling" value="leve"> Leve</label>
+          <label class="radio-option"><input type="radio" name="top_pilling" value="notable"> Notable</label>
+        </div>
+      </div>
+      <div class="field-group"><span class="field-label">Estado general aparente</span>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="top_estadoGeneral" value="nuevo" data-default="true" checked> Como nuevo</label>
+          <label class="radio-option"><input type="radio" name="top_estadoGeneral" value="buen_uso"> Buen uso</label>
+          <label class="radio-option"><input type="radio" name="top_estadoGeneral" value="uso_medio"> Uso medio</label>
+          <label class="radio-option"><input type="radio" name="top_estadoGeneral" value="muy_usado"> Muy usado</label>
+        </div>
+      </div>
+
+      <div class="section-divider">Defectos estructurales</div>
+      <div class="field-group"><span class="field-label">Roturas o agujeros</span>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="top_roturas" value="no" data-default="true" checked> No</label>
+          <label class="radio-option"><input type="radio" name="top_roturas" value="pequeñas"> Pequeños / remendados</label>
+          <label class="radio-option"><input type="radio" name="top_roturas" value="si"> Sí</label>
+        </div>
+      </div>
+      <div class="field-group"><span class="field-label">Otros defectos</span>
+        <div class="check-group">
+          <label class="check-item"><input type="checkbox" id="top_deshilachados"><span class="check-label">Deshilachados visibles<span class="check-note">Costuras deshilachadas en bordes o puños</span></span></label>
+          <label class="check-item"><input type="checkbox" id="top_olor"><span class="check-label">Olor persistente<span class="check-note">Olor a tabaco, químicos o humedad que no sale</span></span></label>
+          <label class="check-item"><input type="checkbox" id="top_elastico"><span class="check-label">Cuello o puños deformados<span class="check-note">Cuello estirado, puños abiertos o forma perdida</span></span></label>
+          <label class="check-item"><input type="checkbox" id="top_costuras"><span class="check-label">Costura suelta o abierta<span class="check-note">Hilo suelto o costura que cedió</span></span></label>
+          <input type="checkbox" id="top_faltaCordón" hidden>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANTALÓN -->
+    <div class="card" id="card-bottom">
+      <div class="card-header"><div class="card-icon">👖</div><h2>Pantalón</h2></div>
+      <div class="field-group"><label for="bottom-brand">Marca</label><select id="bottom-brand"></select></div>
+
+      <div class="section-divider">Defectos visuales</div>
+      <div class="field-group"><span class="field-label">Manchas visibles</span>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="bottom_manchas" value="ninguna" data-default="true" checked> Ninguna</label>
+          <label class="radio-option"><input type="radio" name="bottom_manchas" value="pequeña"> Pequeña/localizada</label>
+          <label class="radio-option"><input type="radio" name="bottom_manchas" value="varias"> Varias o grandes</label>
+        </div>
+      </div>
+      <div class="field-group"><span class="field-label">Desgaste de color</span>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="bottom_desgaste" value="no" data-default="true" checked> No</label>
+          <label class="radio-option"><input type="radio" name="bottom_desgaste" value="ligero"> Ligero</label>
+          <label class="radio-option"><input type="radio" name="bottom_desgaste" value="notable"> Notable</label>
+        </div>
+      </div>
+      <div class="field-group"><span class="field-label">Pilling de tela <span class="text-muted">(bolitas por lavado)</span></span>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="bottom_pilling" value="no" data-default="true" checked> No</label>
+          <label class="radio-option"><input type="radio" name="bottom_pilling" value="leve"> Leve</label>
+          <label class="radio-option"><input type="radio" name="bottom_pilling" value="notable"> Notable</label>
+        </div>
+      </div>
+      <div class="field-group"><span class="field-label">Estado general aparente</span>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="bottom_estadoGeneral" value="nuevo" data-default="true" checked> Como nuevo</label>
+          <label class="radio-option"><input type="radio" name="bottom_estadoGeneral" value="buen_uso"> Buen uso</label>
+          <label class="radio-option"><input type="radio" name="bottom_estadoGeneral" value="uso_medio"> Uso medio</label>
+          <label class="radio-option"><input type="radio" name="bottom_estadoGeneral" value="muy_usado"> Muy usado</label>
+        </div>
+      </div>
+
+      <div class="section-divider">Defectos estructurales</div>
+      <div class="field-group"><span class="field-label">Roturas o agujeros</span>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="bottom_roturas" value="no" data-default="true" checked> No</label>
+          <label class="radio-option"><input type="radio" name="bottom_roturas" value="pequeñas"> Pequeños / remendados</label>
+          <label class="radio-option"><input type="radio" name="bottom_roturas" value="si"> Sí</label>
+        </div>
+      </div>
+      <div class="field-group"><span class="field-label">Otros defectos</span>
+        <div class="check-group">
+          <label class="check-item"><input type="checkbox" id="bottom_deshilachados"><span class="check-label">Deshilachados visibles<span class="check-note">Costuras deshilachadas en bordes o dobladillo</span></span></label>
+          <label class="check-item"><input type="checkbox" id="bottom_faltaCordón"><span class="check-label">Falta el cordón de cintura<span class="check-note">El cordón (agujeta) está ausente</span></span></label>
+          <label class="check-item"><input type="checkbox" id="bottom_olor"><span class="check-label">Olor persistente<span class="check-note">Olor a tabaco, químicos o humedad que no sale</span></span></label>
+          <label class="check-item"><input type="checkbox" id="bottom_elastico"><span class="check-label">Elástico de cintura estirado / deformado<span class="check-note">Ya no regresa a su forma original</span></span></label>
+          <label class="check-item"><input type="checkbox" id="bottom_costuras"><span class="check-label">Costura suelta o abierta<span class="check-note">Hilo suelto o costura que cedió</span></span></label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="action-bar">
+    <button id="btn-calculate" class="btn btn-primary btn-lg">🧮 Cotizar</button>
+    <button id="btn-reset" class="btn btn-secondary">↺ Limpiar</button>
+  </div>
+
+  <section id="result-section" hidden>
+    <div class="result-card">
+      <div class="result-label">Precio de venta sugerido</div>
+      <div class="result-price" id="result-price">—</div>
+      <div class="result-currency">pesos mexicanos</div>
+    </div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-header">
+        <span class="score-bar-title">Puntaje de condición del conjunto</span>
+        <span id="score-label">—</span>
+      </div>
+      <div class="score-bar"><div class="score-fill" id="score-fill" style="width:0%"></div></div>
+      <div class="score-garments" id="score-detail" hidden>
+        <span id="score-top">—</span><span id="score-bottom">—</span>
+      </div>
+    </div>
+    <div class="breakdown-card">
+      <h3>Desglose del cálculo</h3>
+      <table id="breakdown-table"><tbody></tbody></table>
+    </div>
+    <div class="action-bar mt-4">
+      <button id="btn-save" class="btn btn-success">💾 Guardar en historial</button>
+    </div>
+  </section>
+
+  <div class="history-section mt-6">
+    <button id="history-toggle">▸ Historial de cotizaciones</button>
+    <div class="history-body" id="history-body" hidden>
+      <div class="history-toolbar"><button id="btn-clear-history" class="btn btn-danger">Limpiar historial</button></div>
+      <div id="history-list"></div>
+      <p id="history-empty" hidden>No hay cotizaciones guardadas.</p>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════ VISTA: ADMIN ═══════════════════════ -->
+<main class="container" id="view-admin" hidden>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="brands">📋 Marcas</button>
+    <button class="tab-btn" data-tab="factors">⚙ Factores</button>
+    <button class="tab-btn" data-tab="history">📜 Historial</button>
+    <button class="tab-btn" data-tab="io">↕ Exportar / Importar</button>
+  </div>
+
+  <div id="panel-brands" class="tab-panel active">
+    <div class="card">
+      <div class="card-header"><div class="card-icon">📋</div><h2>Tabla de marcas</h2></div>
+      <p class="text-muted" style="margin-bottom:16px">El <strong>Precio base</strong> es el precio del conjunto en estado perfecto (misma marca, excelente condición). El sistema nunca superará este techo ni bajará del piso configurado.</p>
+      <div id="brand-alert" class="alert alert-success" hidden></div>
+      <div style="overflow-x:auto">
+        <table class="brand-table">
+          <thead><tr><th>ID interno</th><th>Nombre visible</th><th>Tier</th><th>Precio base conjunto (MXN)</th><th></th></tr></thead>
+          <tbody id="brand-tbody"></tbody>
+        </table>
+      </div>
+      <div class="action-bar mt-4">
+        <button id="btn-add-brand" class="btn btn-secondary">+ Agregar marca</button>
+        <button id="btn-save-brands" class="btn btn-primary">💾 Guardar marcas</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-factors" class="tab-panel">
+    <div class="card">
+      <div class="card-header"><div class="card-icon">⚙</div><h2>Factores de ajuste</h2></div>
+      <div id="factors-alert" class="alert alert-success" hidden></div>
+      <div class="factor-grid">
+        <div class="factor-field"><label for="factor-mixed">FM — Marcas distintas</label><input type="number" id="factor-mixed" min="0" max="1" step="0.01"><p class="factor-hint">Multiplicador cuando filipina y pantalón son de marcas diferentes (ej. 0.90 = −10 %)</p></div>
+        <div class="factor-field"><label for="factor-loose">FS — Pieza suelta</label><input type="number" id="factor-loose" min="0" max="1" step="0.01"><p class="factor-hint">Multiplicador cuando se vende una sola prenda (ej. 0.65)</p></div>
+        <div class="factor-field"><label for="floor-set">Piso mínimo — Conjunto (MXN)</label><input type="number" id="floor-set" min="0" step="10"><p class="factor-hint">Ningún conjunto se vende por menos de este precio</p></div>
+        <div class="factor-field"><label for="floor-piece">Piso mínimo — Pieza suelta (MXN)</label><input type="number" id="floor-piece" min="0" step="10"><p class="factor-hint">Ninguna pieza suelta se vende por menos de este precio</p></div>
+        <div class="factor-field"><label for="round-to">Redondeo (MXN)</label><input type="number" id="round-to" min="1" step="5"><p class="factor-hint">El precio final se redondea hacia abajo al múltiplo más cercano (ej. 10)</p></div>
+      </div>
+      <div class="section-divider mt-6">Tabla de condición (FC)</div>
+      <p class="text-muted" style="margin-bottom:12px">El puntaje promedio del conjunto se compara con estos umbrales de mayor a menor. El primer umbral que se cumpla determina el factor de condición.</p>
+      <div style="overflow-x:auto">
+        <table class="brand-table">
+          <thead><tr><th>Puntaje mínimo (≥)</th><th>Factor FC</th><th>Etiqueta</th><th></th></tr></thead>
+          <tbody id="threshold-tbody"></tbody>
+        </table>
+      </div>
+      <div class="action-bar mt-4">
+        <button id="btn-add-threshold" class="btn btn-secondary">+ Agregar umbral</button>
+        <button id="btn-save-factors" class="btn btn-primary">💾 Guardar factores</button>
+        <button id="btn-reset-config" class="btn btn-danger" style="margin-left:auto">↺ Restaurar por defecto</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-history" class="tab-panel">
+    <div class="card">
+      <div class="card-header"><div class="card-icon">📜</div><h2>Historial de cotizaciones</h2></div>
+      <div id="admin-history-list" style="overflow-x:auto"></div>
+      <div class="action-bar mt-4">
+        <button id="btn-export-history" class="btn btn-secondary">⬇ Exportar CSV</button>
+        <button id="btn-clear-admin-history" class="btn btn-danger">Limpiar historial</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-io" class="tab-panel">
+    <div class="card">
+      <div class="card-header"><div class="card-icon">↕</div><h2>Exportar / Importar configuración</h2></div>
+      <p class="text-muted" style="margin-bottom:20px">Guarda la configuración actual (marcas y factores) como un archivo JSON que puedes editar con cualquier editor de texto y volver a cargar aquí.</p>
+      <div id="import-alert" class="alert" hidden></div>
+      <div class="factor-grid">
+        <div class="factor-field"><label>Exportar configuración</label>
+          <button id="btn-export" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px">⬇ Descargar scrubs-config.json</button>
+          <p class="factor-hint">Descarga la configuración activa como JSON</p></div>
+        <div class="factor-field"><label>Importar configuración</label>
+          <button id="btn-import" class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:4px">⬆ Cargar JSON</button>
+          <input type="file" id="import-file" accept=".json" hidden>
+          <p class="factor-hint">Reemplaza la configuración actual con el archivo seleccionado</p></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ═══════════════════════ CONFIGURACIÓN POR DEFECTO ═══════════════════════
+const DEFAULT_CONFIG = {
+  version: "1.0.0",
+  brands: [
+    { id:"figs",            name:"FIGS",                 tier:1, basePrice:850 },
+    { id:"medelita",        name:"Medelita",             tier:1, basePrice:820 },
+    { id:"jaanuu",          name:"Jaanuu",               tier:1, basePrice:780 },
+    { id:"mandala",         name:"Mandala",              tier:1, basePrice:750 },
+    { id:"barco_one",       name:"Barco One",            tier:1, basePrice:740 },
+    { id:"koi",             name:"Koi",                  tier:1, basePrice:720 },
+    { id:"healing_hands",   name:"Healing Hands",        tier:1, basePrice:710 },
+    { id:"iguanamed",       name:"Iguanamed",            tier:1, basePrice:700 },
+    { id:"greys_anatomy",   name:"Grey's Anatomy",       tier:2, basePrice:400 },
+    { id:"cherokee",        name:"Cherokee",             tier:2, basePrice:380 },
+    { id:"dickies",         name:"Dickies Medical",      tier:2, basePrice:380 },
+    { id:"med_couture",     name:"Med Couture",          tier:2, basePrice:370 },
+    { id:"carhartt",        name:"Carhartt Scrubs",      tier:2, basePrice:370 },
+    { id:"wonder_wink",     name:"Wonder Wink",          tier:2, basePrice:360 },
+    { id:"butter_soft",     name:"Butter Soft",          tier:2, basePrice:350 },
+    { id:"scrubstar",       name:"Scrubstar",            tier:2, basePrice:320 },
+    { id:"landau",          name:"Landau",               tier:3, basePrice:310 },
+    { id:"natural_uniforms",name:"Natural Uniforms",     tier:3, basePrice:300 },
+    { id:"panda",           name:"Panda Uniform",        tier:3, basePrice:290 },
+    { id:"proscrub",        name:"ProScrub",             tier:3, basePrice:280 },
+    { id:"generic",         name:"Sin marca / Genérico", tier:3, basePrice:280 }
+  ],
+  factors: {
+    mixedBrands: 0.90,
+    loosePiece: 0.65,
+    conditionThresholds: [
+      { minScore:3.5, factor:1.00, label:"Excelente"   },
+      { minScore:3.0, factor:0.95, label:"Muy bueno"   },
+      { minScore:2.5, factor:0.88, label:"Bueno"       },
+      { minScore:2.0, factor:0.80, label:"Regular"     },
+      { minScore:0.0, factor:0.70, label:"Deteriorado" }
+    ]
+  },
+  floors: { set:280, piece:160 },
+  roundTo: 10
+};
+
+// ═══════════════════════ HELPERS COMPARTIDOS ═══════════════════════
+function getConfig() {
+  try { const s = localStorage.getItem("scrubsConfig"); if (s) return JSON.parse(s); } catch(_){}
+  return structuredClone(DEFAULT_CONFIG);
+}
+function saveConfig(cfg) { localStorage.setItem("scrubsConfig", JSON.stringify(cfg)); }
+function qs(sel, ctx=document) { return ctx.querySelector(sel); }
+function qsa(sel, ctx=document) { return [...ctx.querySelectorAll(sel)]; }
+
+// ═══════════════════════ MÓDULO COTIZADOR ═══════════════════════
+(function(){
+  function calculateGarmentScore(d) {
+    let regular = 0;
+    if (d.manchas === "pequeña")   regular += 1;
+    if (d.manchas === "varias")    regular += 2;
+    if (d.desgaste === "ligero")   regular += 1;
+    if (d.desgaste === "notable")  regular += 2;
+    if (d.pilling === "leve")      regular += 0.5;
+    if (d.pilling === "notable")   regular += 1;
+    if (d.estadoGeneral === "uso_medio") regular += 1;
+    if (d.estadoGeneral === "muy_usado") regular += 2;
+    regular = Math.min(regular, 3);
+    let extra = 0;
+    if (d.roturas === "pequeñas")  extra += 0.5;
+    if (d.roturas === "si")        extra += 1;
+    if (d.deshilachados)           extra += 1;
+    if (d.faltaCordón)             extra += 1;
+    if (d.olor)                    extra += 1;
+    if (d.elastico)                extra += 0.5;
+    if (d.costuras)                extra += 0.5;
+    const score = 4 - regular - extra;
+    return Math.max(1, Math.round(score * 10) / 10);
+  }
+
+  function getConditionBand(score) {
+    const cfg = getConfig();
+    for (const t of cfg.factors.conditionThresholds)
+      if (score >= t.minScore) return { factor:t.factor, label:t.label };
+    const last = cfg.factors.conditionThresholds.at(-1);
+    return { factor:last.factor, label:last.label };
+  }
+
+  // El spec usa redondeo hacia abajo: $765 → $760
+  function roundToNearest(value, multiple) { return Math.floor(value / multiple) * multiple; }
+
+  function calculatePrice(params) {
+    const cfg = getConfig();
+    const { topBrandId, bottomBrandId, topScore, bottomScore, isSet, activePiece } = params;
+    const topBrand    = cfg.brands.find(b => b.id === topBrandId);
+    const bottomBrand = cfg.brands.find(b => b.id === bottomBrandId);
+
+    let dominantBrand, sameBrand, FM, avgScore;
+    if (isSet) {
+      // Conjunto: marca dominante = la de mayor nivel; penaliza si no coinciden
+      dominantBrand = topBrand.tier <= bottomBrand.tier ? topBrand : bottomBrand;
+      sameBrand = topBrandId === bottomBrandId;
+      FM = sameBrand ? 1.0 : cfg.factors.mixedBrands;
+      avgScore = Math.round(((topScore + bottomScore) / 2) * 10) / 10;
+    } else {
+      // Pieza suelta: solo cuenta la prenda activa; sin penalización por mezcla
+      dominantBrand = activePiece === "top" ? topBrand : bottomBrand;
+      sameBrand = true;
+      FM = 1.0;
+      avgScore = activePiece === "top" ? topScore : bottomScore;
+    }
+    const basePrice = dominantBrand.basePrice;
+    const condBand = getConditionBand(avgScore);
+    const FC = condBand.factor;
+    const FS = isSet ? 1.0 : cfg.factors.loosePiece;
+    let rawPrice = basePrice * FM * FC * FS;
+    const ceiling = isSet ? basePrice : Math.round(basePrice * FS);
+    const ceilingApplied = rawPrice > ceiling;
+    if (ceilingApplied) rawPrice = ceiling;
+    const floor = isSet ? cfg.floors.set : cfg.floors.piece;
+    const floorApplied = rawPrice < floor;
+    if (floorApplied) rawPrice = floor;
+    const price = roundToNearest(rawPrice, cfg.roundTo);
+    return { price, breakdown: {
+      dominantBrandName:dominantBrand.name, dominantBrandTier:dominantBrand.tier,
+      basePrice, topScore, bottomScore, avgScore, conditionLabel:condBand.label,
+      FM, fmLabel: !isSet ? "Pieza única (×1.00)" : (sameBrand ? "Misma marca (×1.00)" : `Marcas distintas (×${FM.toFixed(2)})`),
+      FC, fcLabel:`Condición ${condBand.label} (×${FC.toFixed(2)})`,
+      FS, fsLabel: isSet ? "Conjunto completo (×1.00)" : `Pieza suelta (×${FS.toFixed(2)})`,
+      rawPrice:Math.round(rawPrice), floor, ceiling, floorApplied, ceilingApplied, isSet
+    }};
+  }
+
+  function getHistory() { try { return JSON.parse(localStorage.getItem("scrubsHistory")||"[]"); } catch(_){ return []; } }
+  function saveToHistory(entry) {
+    const h = getHistory();
+    h.unshift({ ...entry, id:Date.now(), ts:new Date().toISOString() });
+    localStorage.setItem("scrubsHistory", JSON.stringify(h.slice(0,100)));
+  }
+  function deleteHistoryEntry(id) {
+    localStorage.setItem("scrubsHistory", JSON.stringify(getHistory().filter(e => e.id !== id)));
+  }
+
+  function buildBrandOptions(selectEl, selectedId) {
+    const cfg = getConfig();
+    const tiers = [{num:1,label:"Tier 1 — Premium"},{num:2,label:"Tier 2 — Intermedio"},{num:3,label:"Tier 3 — Básico"}];
+    selectEl.innerHTML = "";
+    tiers.forEach(tier => {
+      const brands = cfg.brands.filter(b => b.tier === tier.num);
+      if (!brands.length) return;
+      const group = document.createElement("optgroup");
+      group.label = tier.label;
+      brands.forEach(b => {
+        const opt = document.createElement("option");
+        opt.value = b.id; opt.textContent = `${b.name}  ($${b.basePrice})`;
+        if (b.id === selectedId) opt.selected = true;
+        group.appendChild(opt);
+      });
+      selectEl.appendChild(group);
+    });
+  }
+
+  function readGarmentData(prefix) {
+    return {
+      manchas:       qs(`[name="${prefix}_manchas"]:checked`)?.value       || "ninguna",
+      desgaste:      qs(`[name="${prefix}_desgaste"]:checked`)?.value      || "no",
+      pilling:       qs(`[name="${prefix}_pilling"]:checked`)?.value       || "no",
+      estadoGeneral: qs(`[name="${prefix}_estadoGeneral"]:checked`)?.value || "nuevo",
+      roturas:       qs(`[name="${prefix}_roturas"]:checked`)?.value       || "no",
+      deshilachados: qs(`#${prefix}_deshilachados`)?.checked               || false,
+      faltaCordón:   qs(`#${prefix}_faltaCordón`)?.checked                 || false,
+      olor:          qs(`#${prefix}_olor`)?.checked                        || false,
+      elastico:      qs(`#${prefix}_elastico`)?.checked                    || false,
+      costuras:      qs(`#${prefix}_costuras`)?.checked                    || false
+    };
+  }
+
+  function getScoreClass(s) {
+    if (s >= 3.5) return "score-excellent";
+    if (s >= 3.0) return "score-good";
+    if (s >= 2.5) return "score-fair";
+    if (s >= 2.0) return "score-poor";
+    return "score-bad";
+  }
+
+  function renderResult(result, brandNames) {
+    const { price, breakdown:b } = result;
+    qs("#result-price").textContent = `$${price.toLocaleString("es-MX")} MXN`;
+    qs("#score-fill").style.width = `${(b.avgScore/4)*100}%`;
+    qs("#score-fill").className = `score-fill ${getScoreClass(b.avgScore)}`;
+    qs("#score-label").textContent = `${b.avgScore.toFixed(1)} / 4.0 — ${b.conditionLabel}`;
+    const rows = [
+      ["Marca dominante", `${b.dominantBrandName} (Tier ${b.dominantBrandTier})`],
+      ["Precio base", `$${b.basePrice} MXN`],
+      ["Factor marca (FM)", b.fmLabel],
+      ["Factor condición (FC)", b.fcLabel],
+      ["Factor pieza (FS)", b.fsLabel],
+      ["Precio calculado", `$${Math.round(b.FM*b.FC*b.FS*b.basePrice)} MXN`]
+    ];
+    if (b.floorApplied)   rows.push(["Ajuste", `Piso mínimo aplicado → $${b.floor} MXN`]);
+    if (b.ceilingApplied) rows.push(["Ajuste", `Techo máximo aplicado → $${b.ceiling} MXN`]);
+    rows.push(["Precio final redondeado", `$${price} MXN`]);
+    qs("#breakdown-table tbody").innerHTML = rows.map(([k,v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("");
+    if (b.isSet) {
+      qs("#score-top").textContent    = `Filipina: ${b.topScore.toFixed(1)}/4`;
+      qs("#score-bottom").textContent = `Pantalón: ${b.bottomScore.toFixed(1)}/4`;
+      qs("#score-detail").hidden = false;
+    } else { qs("#score-detail").hidden = true; }
+    const section = qs("#result-section");
+    section.hidden = false;
+    section.scrollIntoView({ behavior:"smooth", block:"start" });
+    return { price, topBrand:brandNames.top, bottomBrand:brandNames.bottom, isSet:b.isSet, avgScore:b.avgScore, conditionLabel:b.conditionLabel, breakdown:b };
+  }
+
+  function renderHistory() {
+    const history = getHistory();
+    const container = qs("#history-list"), emptyMsg = qs("#history-empty");
+    if (!history.length) { container.innerHTML = ""; emptyMsg.hidden = false; return; }
+    emptyMsg.hidden = true;
+    container.innerHTML = history.map(e => {
+      const date = new Date(e.ts).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+      const brandLabel = e.isSet ? `${e.topBrand} + ${e.bottomBrand}` : (e.topBrand || e.bottomBrand);
+      return `<div class="history-card" data-id="${e.id}">
+        <div class="history-info">
+          <span class="history-brands">${brandLabel}</span>
+          <span class="history-type">${e.isSet ? "Conjunto" : "Pieza suelta"}</span>
+          <span class="history-condition">${e.conditionLabel} (${e.avgScore.toFixed(1)})</span>
+          <span class="history-date">${date}</span>
+        </div>
+        <div class="history-price">$${e.price.toLocaleString("es-MX")}</div>
+        <button class="btn-delete-history" data-id="${e.id}" title="Eliminar">✕</button>
+      </div>`;
+    }).join("");
+    qsa(".btn-delete-history").forEach(btn => btn.addEventListener("click", ev => {
+      ev.stopPropagation(); deleteHistoryEntry(Number(btn.dataset.id)); renderHistory();
+    }));
+  }
+
+  function applyModeUI() {
+    const mode = qs('input[name="mode"]:checked').value;
+    qs("#card-top").classList.toggle("card-faded", mode === "bottom");
+    qs("#card-bottom").classList.toggle("card-faded", mode === "top");
+    qs("#score-detail").hidden = true;
+  }
+
+  let lastEntry = null;
+
+  function doCalculate() {
+    const mode = qs('input[name="mode"]:checked').value;
+    const isSet = mode === "set";
+    const activePiece = isSet ? null : mode;
+    const topBrandId = qs("#top-brand").value, bottomBrandId = qs("#bottom-brand").value;
+    const topScore = calculateGarmentScore(readGarmentData("top"));
+    const bottomScore = calculateGarmentScore(readGarmentData("bottom"));
+    const result = calculatePrice({ topBrandId, bottomBrandId, topScore, bottomScore, isSet, activePiece });
+    const cfg = getConfig();
+    const topBrandName    = cfg.brands.find(b => b.id === topBrandId)?.name    || topBrandId;
+    const bottomBrandName = cfg.brands.find(b => b.id === bottomBrandId)?.name || bottomBrandId;
+    lastEntry = renderResult(result, { top:topBrandName, bottom:bottomBrandName });
+    lastEntry.topBrand = topBrandName; lastEntry.bottomBrand = bottomBrandName;
+    const btn = qs("#btn-save"); btn.textContent = "💾 Guardar en historial"; btn.disabled = false;
+  }
+
+  function resetForm() {
+    qsa('#view-cotizador input[type="radio"]').forEach(r => { r.checked = r.dataset.default === "true"; });
+    qsa('#view-cotizador input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+    qs('input[name="mode"][value="set"]').checked = true;
+    applyModeUI();
+    qs("#result-section").hidden = true;
+    lastEntry = null;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    buildBrandOptions(qs("#top-brand"), "cherokee");
+    buildBrandOptions(qs("#bottom-brand"), "cherokee");
+    qsa('input[name="mode"]').forEach(r => r.addEventListener("change", applyModeUI));
+    applyModeUI();
+
+    // Recálculo en vivo al cambiar cualquier campo del cotizador
+    document.addEventListener("change", e => {
+      if (e.target.closest("#view-cotizador") && !e.target.closest(".mode-toggle")) {
+        clearTimeout(window._calcTimer);
+        window._calcTimer = setTimeout(() => { if (!qs("#result-section").hidden) doCalculate(); }, 150);
+      }
+    });
+
+    qs("#btn-calculate").addEventListener("click", doCalculate);
+    qs("#btn-save").addEventListener("click", () => {
+      if (!lastEntry) return;
+      saveToHistory(lastEntry); renderHistory();
+      const btn = qs("#btn-save"); btn.textContent = "¡Guardado!"; btn.disabled = true;
+      setTimeout(() => { btn.textContent = "💾 Guardar en historial"; btn.disabled = false; }, 2000);
+    });
+    qs("#history-toggle").addEventListener("click", () => {
+      const body = qs("#history-body"); const isOpen = !body.hidden; body.hidden = isOpen;
+      qs("#history-toggle").textContent = isOpen ? "▸ Historial de cotizaciones" : "▾ Historial de cotizaciones";
+    });
+    qs("#btn-clear-history").addEventListener("click", () => {
+      if (confirm("¿Eliminar todo el historial?")) { localStorage.removeItem("scrubsHistory"); renderHistory(); }
+    });
+    qs("#btn-reset").addEventListener("click", resetForm);
+    renderHistory();
+  });
+})();
+
+// ═══════════════════════ MÓDULO ADMIN ═══════════════════════
+(function(){
+  function showAlert(id, msg, type="success") {
+    const el = qs(`#${id}`); if (!el) return;
+    el.textContent = msg; el.className = `alert alert-${type}`; el.hidden = false;
+    clearTimeout(el._timer); el._timer = setTimeout(() => { el.hidden = true; }, 3000);
+  }
+
+  function renderBrandTable() {
+    const cfg = getConfig();
+    qs("#brand-tbody").innerHTML = cfg.brands.map((b,i) => `
+      <tr data-index="${i}">
+        <td><input type="text" class="brand-id" value="${b.id}" placeholder="id_unico" style="width:130px"></td>
+        <td><input type="text" class="brand-name" value="${b.name}" placeholder="Nombre visible" style="width:180px"></td>
+        <td><select class="brand-tier">
+          <option value="1" ${b.tier===1?"selected":""}>1 — Premium</option>
+          <option value="2" ${b.tier===2?"selected":""}>2 — Intermedio</option>
+          <option value="3" ${b.tier===3?"selected":""}>3 — Básico</option>
+        </select></td>
+        <td><input type="number" class="brand-price" value="${b.basePrice}" min="0" step="10" style="width:90px"> MXN</td>
+        <td><button class="btn btn-danger btn-delete-brand" data-index="${i}" style="padding:4px 10px;font-size:.8rem">✕</button></td>
+      </tr>`).join("");
+    qsa(".btn-delete-brand").forEach(btn => btn.addEventListener("click", () => {
+      const c = getConfig(); c.brands.splice(Number(btn.dataset.index),1); saveConfig(c);
+      renderBrandTable(); refreshCotizadorBrands(); showAlert("brand-alert","Marca eliminada.","success");
+    }));
+  }
+
+  function collectBrandTable() {
+    return qsa("#brand-tbody tr").map(row => ({
+      id:        row.querySelector(".brand-id").value.trim(),
+      name:      row.querySelector(".brand-name").value.trim(),
+      tier:      Number(row.querySelector(".brand-tier").value),
+      basePrice: Number(row.querySelector(".brand-price").value)
+    })).filter(b => b.id && b.name && b.basePrice > 0);
+  }
+
+  function renderThresholds() {
+    const cfg = getConfig();
+    qs("#threshold-tbody").innerHTML = cfg.factors.conditionThresholds.map((t,i) => `
+      <tr data-index="${i}">
+        <td><input type="number" class="thresh-min" value="${t.minScore}" min="0" max="4" step="0.1" style="width:70px"></td>
+        <td><input type="number" class="thresh-factor" value="${t.factor}" min="0" max="1" step="0.01" style="width:70px"></td>
+        <td><input type="text" class="thresh-label" value="${t.label}" style="width:120px"></td>
+        <td><button class="btn btn-danger btn-delete-thresh" data-index="${i}" style="padding:4px 10px;font-size:.8rem">✕</button></td>
+      </tr>`).join("");
+    qsa(".btn-delete-thresh").forEach(btn => btn.addEventListener("click", () => {
+      const c = getConfig(); c.factors.conditionThresholds.splice(Number(btn.dataset.index),1);
+      saveConfig(c); renderThresholds();
+    }));
+  }
+
+  function collectThresholds() {
+    return qsa("#threshold-tbody tr").map(row => ({
+      minScore: Number(row.querySelector(".thresh-min").value),
+      factor:   Number(row.querySelector(".thresh-factor").value),
+      label:    row.querySelector(".thresh-label").value.trim()
+    }));
+  }
+
+  function renderHistory() {
+    let history = [];
+    try { history = JSON.parse(localStorage.getItem("scrubsHistory")||"[]"); } catch(_){}
+    const container = qs("#admin-history-list");
+    if (!history.length) { container.innerHTML = '<p class="text-muted">No hay cotizaciones guardadas.</p>'; return; }
+    container.innerHTML = `<table class="brand-table" style="font-size:.83rem">
+      <thead><tr><th>Fecha</th><th>Marcas</th><th>Tipo</th><th>Condición</th><th>Precio</th></tr></thead>
+      <tbody>${history.map(e => {
+        const date = new Date(e.ts).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+        const brands = e.isSet ? `${e.topBrand} + ${e.bottomBrand}` : (e.topBrand || e.bottomBrand);
+        return `<tr><td>${date}</td><td>${brands}</td><td>${e.isSet?"Conjunto":"Pieza suelta"}</td><td>${e.conditionLabel} (${Number(e.avgScore).toFixed(1)})</td><td><strong>$${e.price}</strong></td></tr>`;
+      }).join("")}</tbody></table>`;
+  }
+
+  function loadFactorFields() {
+    const cfg = getConfig();
+    qs("#factor-mixed").value = cfg.factors.mixedBrands;
+    qs("#factor-loose").value = cfg.factors.loosePiece;
+    qs("#floor-set").value    = cfg.floors.set;
+    qs("#floor-piece").value  = cfg.floors.piece;
+    qs("#round-to").value     = cfg.roundTo;
+  }
+
+  function saveFactorFields() {
+    const cfg = getConfig();
+    cfg.factors.mixedBrands = Number(qs("#factor-mixed").value);
+    cfg.factors.loosePiece  = Number(qs("#factor-loose").value);
+    cfg.floors.set          = Number(qs("#floor-set").value);
+    cfg.floors.piece        = Number(qs("#floor-piece").value);
+    cfg.roundTo             = Number(qs("#round-to").value);
+    cfg.factors.conditionThresholds = collectThresholds();
+    saveConfig(cfg); showAlert("factors-alert","Factores guardados.","success");
+  }
+
+  function exportConfig() {
+    const blob = new Blob([JSON.stringify(getConfig(),null,2)], { type:"application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement("a"), { href:url, download:"scrubs-config.json" });
+    a.click(); URL.revokeObjectURL(url);
+  }
+
+  function importConfig(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const cfg = JSON.parse(e.target.result);
+        if (!cfg.brands || !cfg.factors) throw new Error("Formato inválido");
+        saveConfig(cfg); renderBrandTable(); renderThresholds(); loadFactorFields(); refreshCotizadorBrands();
+        showAlert("import-alert","Configuración importada correctamente.","success");
+      } catch (err) { showAlert("import-alert",`Error: ${err.message}`,"danger"); }
+    };
+    reader.readAsText(file);
+  }
+
+  // Refresca los selects del cotizador tras cambios en marcas
+  function refreshCotizadorBrands() {
+    const cfg = getConfig();
+    ["#top-brand","#bottom-brand"].forEach(sel => {
+      const el = qs(sel); if (!el) return;
+      const prev = el.value;
+      const tiers = [{num:1,label:"Tier 1 — Premium"},{num:2,label:"Tier 2 — Intermedio"},{num:3,label:"Tier 3 — Básico"}];
+      el.innerHTML = "";
+      tiers.forEach(tier => {
+        const brands = cfg.brands.filter(b => b.tier === tier.num);
+        if (!brands.length) return;
+        const g = document.createElement("optgroup"); g.label = tier.label;
+        brands.forEach(b => {
+          const o = document.createElement("option");
+          o.value = b.id; o.textContent = `${b.name}  ($${b.basePrice})`;
+          if (b.id === prev) o.selected = true;
+          g.appendChild(o);
+        });
+        el.appendChild(g);
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Tabs
+    qsa(".tab-btn").forEach(btn => btn.addEventListener("click", () => {
+      qsa(".tab-btn").forEach(b => b.classList.remove("active"));
+      qsa(".tab-panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      qs(`#panel-${btn.dataset.tab}`).classList.add("active");
+      if (btn.dataset.tab === "history") renderHistory();
+    }));
+
+    renderBrandTable(); renderThresholds(); loadFactorFields(); renderHistory();
+
+    qs("#btn-save-brands").addEventListener("click", () => {
+      const cfg = getConfig(); const brands = collectBrandTable();
+      if (!brands.length) { showAlert("brand-alert","No hay marcas válidas para guardar.","danger"); return; }
+      cfg.brands = brands; saveConfig(cfg);
+      renderBrandTable(); refreshCotizadorBrands();
+      showAlert("brand-alert","Marcas guardadas correctamente.","success");
+    });
+    qs("#btn-add-brand").addEventListener("click", () => {
+      const cfg = getConfig();
+      cfg.brands.push({ id:"nueva_marca", name:"Nueva Marca", tier:2, basePrice:350 });
+      saveConfig(cfg); renderBrandTable();
+      qsa("#brand-tbody tr").at(-1)?.scrollIntoView({ behavior:"smooth", block:"nearest" });
+      qsa("#brand-tbody tr").at(-1)?.querySelector("input")?.focus();
+    });
+    qs("#btn-save-factors").addEventListener("click", saveFactorFields);
+    qs("#btn-add-threshold").addEventListener("click", () => {
+      const cfg = getConfig();
+      cfg.factors.conditionThresholds.push({ minScore:0.0, factor:0.60, label:"Muy deteriorado" });
+      saveConfig(cfg); renderThresholds();
+    });
+    qs("#btn-reset-config").addEventListener("click", () => {
+      if (confirm("¿Restaurar la configuración por defecto? Se perderán todos los cambios.")) {
+        localStorage.removeItem("scrubsConfig");
+        renderBrandTable(); renderThresholds(); loadFactorFields(); refreshCotizadorBrands();
+        showAlert("factors-alert","Configuración restaurada.","success");
+      }
+    });
+    qs("#btn-export").addEventListener("click", exportConfig);
+    qs("#btn-import").addEventListener("click", () => qs("#import-file").click());
+    qs("#import-file").addEventListener("change", e => { if (e.target.files[0]) importConfig(e.target.files[0]); e.target.value = ""; });
+    qs("#btn-clear-admin-history").addEventListener("click", () => {
+      if (confirm("¿Eliminar todo el historial de cotizaciones?")) { localStorage.removeItem("scrubsHistory"); renderHistory(); }
+    });
+    qs("#btn-export-history").addEventListener("click", () => {
+      let history = []; try { history = JSON.parse(localStorage.getItem("scrubsHistory")||"[]"); } catch(_){}
+      if (!history.length) { alert("No hay historial."); return; }
+      const rows = [
+        ["Fecha","Marca filipina","Marca pantalón","Tipo","Condición","Puntaje","Precio MXN"],
+        ...history.map(e => [
+          new Date(e.ts).toLocaleString("es-MX"), e.topBrand||"", e.bottomBrand||"",
+          e.isSet?"Conjunto":"Pieza suelta", e.conditionLabel||"", Number(e.avgScore).toFixed(1), e.price
+        ])
+      ];
+      const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+      const blob = new Blob(["﻿"+csv], { type:"text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement("a"), { href:url, download:"historial-cotizaciones.csv" });
+      a.click(); URL.revokeObjectURL(url);
+    });
+  });
+})();
+
+// ═══════════════════════ ALTERNADOR DE VISTAS ═══════════════════════
+document.addEventListener("DOMContentLoaded", () => {
+  const navCot = qs("#nav-cotizador"), navAdm = qs("#nav-admin");
+  const viewCot = qs("#view-cotizador"), viewAdm = qs("#view-admin");
+  function show(view) {
+    const admin = view === "admin";
+    viewCot.hidden = admin; viewAdm.hidden = !admin;
+    navCot.classList.toggle("active", !admin);
+    navAdm.classList.toggle("active", admin);
+    window.scrollTo({ top:0 });
+  }
+  navCot.addEventListener("click", () => show("cotizador"));
+  navAdm.addEventListener("click", () => show("admin"));
+});
+</script>
+</body>
+</html>
