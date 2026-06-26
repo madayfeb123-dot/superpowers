@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cotizador de Scrubs</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">🩺</div>
+  <div>
+    <h1>Cotizador de Scrubs</h1>
+    <p>Precio objetivo y reproducible para conjuntos médicos de segunda mano</p>
+  </div>
+  <nav class="header-nav">
+    <a href="admin.html">⚙ Admin</a>
+  </nav>
+</header>
+
+<main class="container">
+
+  <!-- ── Mode toggle ───────────────────────────────────────────────────── -->
+  <div class="mode-toggle">
+    <h3>¿Qué vas a cotizar?</h3>
+    <div class="mode-options">
+      <label class="mode-option">
+        <input type="radio" name="mode" value="set" checked>
+        <span class="mode-icon">👔👖</span> Conjunto completo
+      </label>
+      <label class="mode-option">
+        <input type="radio" name="mode" value="top">
+        <span class="mode-icon">👔</span> Solo filipina
+      </label>
+      <label class="mode-option">
+        <input type="radio" name="mode" value="bottom">
+        <span class="mode-icon">👖</span> Solo pantalón
+      </label>
+    </div>
+  </div>
+
+  <!-- ── Garment cards ──────────────────────────────────────────────────── -->
+  <div class="grid-2">
+
+    <!-- TOP — Filipina -->
+    <div class="card" id="card-top">
+      <div class="card-header">
+        <div class="card-icon">👔</div>
+        <h2>Filipina</h2>
+      </div>
+
+      <div class="field-group">
+        <label for="top-brand">Marca</label>
+        <select id="top-brand"></select>
+      </div>
+
+      <div class="section-divider">Defectos visuales</div>
+
+      <div class="field-group">
+        <span class="field-label">Manchas visibles</span>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="top_manchas" value="ninguna" data-default="true" checked> Ninguna
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_manchas" value="pequeña"> Pequeña/localizada
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_manchas" value="varias"> Varias o grandes
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Desgaste de color</span>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="top_desgaste" value="no" data-default="true" checked> No
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_desgaste" value="ligero"> Ligero
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_desgaste" value="notable"> Notable
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Pilling de tela <span class="text-muted">(bolitas por lavado)</span></span>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="top_pilling" value="no" data-default="true" checked> No
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_pilling" value="leve"> Leve
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_pilling" value="notable"> Notable
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Estado general aparente</span>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="top_estadoGeneral" value="nuevo" data-default="true" checked> Como nuevo
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_estadoGeneral" value="buen_uso"> Buen uso
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_estadoGeneral" value="uso_medio"> Uso medio
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_estadoGeneral" value="muy_usado"> Muy usado
+          </label>
+        </div>
+      </div>
+
+      <div class="section-divider">Defectos estructurales</div>
+
+      <div class="field-group">
+        <span class="field-label">Roturas o agujeros</span>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="top_roturas" value="no" data-default="true" checked> No
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_roturas" value="pequeñas"> Pequeños / remendados
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="top_roturas" value="si"> Sí
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Otros defectos</span>
+        <div class="check-group">
+          <label class="check-item">
+            <input type="checkbox" id="top_deshilachados">
+            <span class="check-label">
+              Deshilachados visibles
+              <span class="check-note">Costuras deshilachadas en bordes o puños</span>
+            </span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="top_olor">
+            <span class="check-label">
+              Olor persistente
+              <span class="check-note">Olor a tabaco, químicos o humedad que no sale</span>
+            </span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="top_elastico">
+            <span class="check-label">
+              Cuello o puños deformados
+              <span class="check-note">Cuello estirado, puños abiertos o forma perdida</span>
+            </span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="top_costuras">
+            <span class="check-label">
+              Costura suelta o abierta
+              <span class="check-note">Hilo suelto o costura que cedió</span>
+            </span>
+          </label>
+          <!-- faltaCordón oculto en filipina, no aplica -->
+          <input type="checkbox" id="top_faltaCordón" hidden>
+        </div>
+      </div>
+    </div><!-- /card-top -->
+
+    <!-- BOTTOM — Pantalón -->
+    <div class="card" id="card-bottom">
+      <div class="card-header">
+        <div class="card-icon">👖</div>
+        <h2>Pantalón</h2>
+      </div>
+
+      <div class="field-group">
+        <label for="bottom-brand">Marca</label>
+        <select id="bottom-brand"></select>
+      </div>
+
+      <div class="section-divider">Defectos visuales</div>
+
+      <div class="field-group">
+        <span class="field-label">Manchas visibles</span>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="bottom_manchas" value="ninguna" data-default="true" checked> Ninguna
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_manchas" value="pequeña"> Pequeña/localizada
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_manchas" value="varias"> Varias o grandes
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Desgaste de color</span>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="bottom_desgaste" value="no" data-default="true" checked> No
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_desgaste" value="ligero"> Ligero
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_desgaste" value="notable"> Notable
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Pilling de tela <span class="text-muted">(bolitas por lavado)</span></span>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="bottom_pilling" value="no" data-default="true" checked> No
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_pilling" value="leve"> Leve
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_pilling" value="notable"> Notable
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Estado general aparente</span>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="bottom_estadoGeneral" value="nuevo" data-default="true" checked> Como nuevo
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_estadoGeneral" value="buen_uso"> Buen uso
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_estadoGeneral" value="uso_medio"> Uso medio
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_estadoGeneral" value="muy_usado"> Muy usado
+          </label>
+        </div>
+      </div>
+
+      <div class="section-divider">Defectos estructurales</div>
+
+      <div class="field-group">
+        <span class="field-label">Roturas o agujeros</span>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="bottom_roturas" value="no" data-default="true" checked> No
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_roturas" value="pequeñas"> Pequeños / remendados
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="bottom_roturas" value="si"> Sí
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Otros defectos</span>
+        <div class="check-group">
+          <label class="check-item">
+            <input type="checkbox" id="bottom_deshilachados">
+            <span class="check-label">
+              Deshilachados visibles
+              <span class="check-note">Costuras deshilachadas en bordes o dobladillo</span>
+            </span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="bottom_faltaCordón">
+            <span class="check-label">
+              Falta el cordón de cintura
+              <span class="check-note">El cordón (agujeta) está ausente</span>
+            </span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="bottom_olor">
+            <span class="check-label">
+              Olor persistente
+              <span class="check-note">Olor a tabaco, químicos o humedad que no sale</span>
+            </span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="bottom_elastico">
+            <span class="check-label">
+              Elástico de cintura estirado / deformado
+              <span class="check-note">Ya no regresa a su forma original</span>
+            </span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="bottom_costuras">
+            <span class="check-label">
+              Costura suelta o abierta
+              <span class="check-note">Hilo suelto o costura que cedió</span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div><!-- /card-bottom -->
+
+  </div><!-- /grid-2 -->
+
+  <!-- ── Action bar ─────────────────────────────────────────────────────── -->
+  <div class="action-bar">
+    <button id="btn-calculate" class="btn btn-primary btn-lg">
+      🧮 Cotizar
+    </button>
+    <button id="btn-reset" class="btn btn-secondary">
+      ↺ Limpiar
+    </button>
+  </div>
+
+  <!-- ── Results ────────────────────────────────────────────────────────── -->
+  <section id="result-section" hidden>
+
+    <div class="result-card">
+      <div class="result-label">Precio de venta sugerido</div>
+      <div class="result-price" id="result-price">—</div>
+      <div class="result-currency">pesos mexicanos</div>
+    </div>
+
+    <div class="score-bar-wrap">
+      <div class="score-bar-header">
+        <span class="score-bar-title">Puntaje de condición del conjunto</span>
+        <span id="score-label">—</span>
+      </div>
+      <div class="score-bar">
+        <div class="score-fill" id="score-fill" style="width:0%"></div>
+      </div>
+      <div class="score-garments" id="score-detail" hidden>
+        <span id="score-top">—</span>
+        <span id="score-bottom">—</span>
+      </div>
+    </div>
+
+    <div class="breakdown-card">
+      <h3>Desglose del cálculo</h3>
+      <table id="breakdown-table"><tbody></tbody></table>
+    </div>
+
+    <div class="action-bar mt-4">
+      <button id="btn-save" class="btn btn-success">
+        💾 Guardar en historial
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ── History ────────────────────────────────────────────────────────── -->
+  <div class="history-section mt-6">
+    <button id="history-toggle">▸ Historial de cotizaciones</button>
+    <div class="history-body" id="history-body" hidden>
+      <div class="history-toolbar">
+        <button id="btn-clear-history" class="btn btn-danger">Limpiar historial</button>
+      </div>
+      <div id="history-list"></div>
+      <p id="history-empty" hidden>No hay cotizaciones guardadas.</p>
+    </div>
+  </div>
+
+</main>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
